@@ -67,6 +67,9 @@
 # ignore ModelSim generated files and directories (temp files and so on)
 [_@]*
 
+# software binary files
+!*.mpf
+
 # ignore compilation output of ModelSim
 *.mti
 *.dat
@@ -87,5 +90,12 @@ cov*/
 transcript*
 sc_dpiheader.h
 vsim.dbg
+
+### VisualStudioCode ###
+.vscode/*
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/launch.json
+# !.vscode/extensions.json
 
 # End of https://www.gitignore.io/api/modelsim,alteraquartusii
