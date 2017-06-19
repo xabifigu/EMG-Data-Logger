@@ -31,6 +31,16 @@ else
     pause(1);                    % Optional wait for device to wake up 
     
 		serialPortInit(s1);
+%    % Set the port parameters
+%    set(s1, 'baudrate', 9600);     % 9600
+%    set(s1, 'bytesize', 8);        % 5, 6, 7 or 8
+%    set(s1, 'parity', 'n');        % 'n' or 'y'
+%    set(s1, 'stopbits', 1);        % 1 or 2
+%    set(s1, 'timeout', 5);         % 0.5 Seconds
+%        
+%    % Optional commands, these can be 'on' or 'off'
+%    set(s1, 'requesttosend', 'off');      % Sets the RTS line to off
+%    set(s1, 'dataterminalready', 'off'); % Sets the DTR line to off
     
     % Optional Flush input and output buffers
     srl_flush(s1);
@@ -51,6 +61,8 @@ else
         % posición del vector de datos (append)
         % '0.0' indica que el dato a almacenar es double
         serial_data(end+1) = srl_read(s1,1) + 0.0;
+%          a=fread(s1,1,'char');
+%        horzcat(serial_data, srl_read(sl,10));
       catch
         disp("X.F.: Serial Port stopped");
         break
@@ -58,7 +70,7 @@ else
       % almacenar el tiempo en el cual se ha obtenido el dato.
       % Se guarda tras la última posición del vector de tiempo(append)
 %      time_vector(end+1) = toc(t_start) + 0.0;
-      time_vector(end+1) = (0.00010416667*dataRead) + 0.0;
+      time_vector(end+1) = (0.0010416667*dataRead) + 0.0;
       dataRead++;
     endwhile  % fin bucle recepción de puerto serie
   
@@ -68,24 +80,10 @@ else
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    %        PROCESAR DATOS                %
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Formato de datos lo componen dos bytes XY0 Y1Y2
-    %       X = número de canal (4 bits)
-    %       Y0Y1Y2 = dato del canal (12 bits)
-    % Primero hay que determinar qué bytes contienen la 
-    % cabecera de cada canal: pares o impares 
+    % obtener el primer byte válido
+    start_byte = -1;
     if (dataRead != 0)
-      headersFound = false;
-      index = 1;
-      channel = 0;
-      ch_counter = 0;
-      while ((ch_counter != (8 + 1)) && (index <= 20)) % hay que ller el primer canal 2 veces
-%        if (((serial_data(index) & 0xF0)>>4) < 8)
-        ch = getHighNibbleFromByte(serial_data(index));
-        if (ch < 8)
-          
-        endif
-        index++;
-      endwhile
+      start_byte = searchHeader(serial_data);
     endif
  
    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -99,7 +97,7 @@ else
     % recibido al menos un dato
     if (dataRead != 0)
       plot(time_vector,serial_data);
-      xlabel ("time (ms)");
+      xlabel ("time (s)");
       ylabel ("read data");
       title ("EMG data");
     endif
@@ -133,6 +131,76 @@ function	[ch, value] = getProcessReadData(in_data)
 	
 	aux = getLowNibbleFromByte(in_data(1));
 	value = bytes2Word(aux,in_data(2));
+endfunction
+
+function  data_start = searchHeader(in_data)
+    % Formato de datos lo componen dos bytes XY0 Y1Y2
+    %       X = número de canal (4 bits)
+    %       Y0Y1Y2 = dato del canal (12 bits)
+    % Primero hay que determinar qué bytes contienen la 
+    % cabecera de cada canal: pares o impares 
+    data_start = -1;
+    
+    headersFound = false;
+    index = 1;
+    expected_ch = 0;
+    ch_counter = 0;
+    start_search = false;
+    
+    %  Bucle para encontrar el patrón correcto
+    %  Se ejecutará hasta encontrar la secuencia buscada 18 veces, o 
+    %  hasta que se hayan leído 50 bytes sin encontrar la cabecera 
+    while ((ch_counter < (18)) && (index <= 50)) % hay que leer el primer canal 2 veces
+      while (start_search != true)
+        expected_ch = getHighNibbleFromByte(in_data(index));
+        if (expected_ch < 8)
+          % posible canal encontrado
+          start_search = true;
+          data_start = index;  % se guarda el primer dato del cuál hay que empezar a leer
+          % se almacena el siguinte canal que se espera encontrar
+          if (expected_ch == (8-1))
+            expected_ch = 0;
+          else
+            expected_ch++;
+          endif
+          index += 2;   % se incrementa el índice en dos (se busca cabecera/num canal)
+          ch_counter++; % se incrementa el contados de cabeceras encontradas
+        else
+          % posible canal no encontrado, comprobar siguiente byte
+          index++;    
+        endif
+      endwhile
+      
+      % Bucle hasta encontrar todas las cabeceras esperadas o encontrar un error
+      while ((ch_counter < (18)) && (ch_counter != 0))
+        if (expected_ch == getHighNibbleFromByte(in_data(index)))
+          % el canal encontrado es el esperado
+          index += 2;     % se incrementa el índice en dos (se busca cabecera/num canal)
+          ch_counter++;   % se incrementa el contados de cabeceras encontradas 
+          % se almacena el siguinte canal que se espera encontrar 
+          if (expected_ch == (8-1))
+            expected_ch = 0;
+          else
+            expected_ch++;
+          endif
+        else
+          % se ha detectado un error en la trama
+          % se resetean el contador y se decrementa el índice, ya que el
+          % byte correcto puede haberse saltado
+          expected_ch = 0;
+          ch_counter = 0;
+          index--;
+          start_search = false;
+        endif
+      endwhile     
+    endwhile
+    
+    if (ch_counter >= (18))
+      disp('Patron correcto!');
+    else
+      disp('Patron no encontrado');
+      data_start = -1;  % no se ha encontrado el patrón, se devuelve -1
+    endif
 endfunction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
