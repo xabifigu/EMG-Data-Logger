@@ -9,7 +9,8 @@ function serialPortInit(s1)
 %    pause(1);                    % Optional wait for device to wake up 
     
     % Set the port parameters
-    set(s1, 'baudrate', 9600);     % 9600
+    % set(s1, 'baudrate', 9600);     % 9600
+		set(s1, 'baudrate', 115200);     % 9600
     set(s1, 'bytesize', 8);        % 5, 6, 7 or 8
     set(s1, 'parity', 'n');        % 'n' or 'y'
     set(s1, 'stopbits', 1);        % 1 or 2
@@ -202,15 +203,36 @@ else
 				index += 2;
 			endwhile
     endif
-		
-
- 
+		 
 % GUARDAR DATOS
-    
+		% los datos se guardan en CSV:
+		%	Columna 0: tiempo
+		% Columna 1: valores ADC
+    if (dataRead != 0)
+			for i = 1:8
+				M = [time_array{1};double(ch_array{1})];
+				MT = M';
+				file_name = strcat("data_channel_", num2str(i-1), ".csv");
+				csvwrite(file_name,MT);
+			endfor
+		endif
+		
 % MOSTRAR DATOS
     % mostrar gráfica de los datos obtenidos, siempre y cuando se haya
     % recibido al menos un dato
     if (dataRead != 0)
+			% una misma ventana para todos los canales
+			% figure(1);
+			% for i = 1:8
+				% subplot (8, 1, i);
+				% plot(time_array{i},ch_array{i})
+				% xlabel ("time (s)");
+				% ylabel ("value");
+				% title(strcat("channel", num2str(i-1)));
+				% % title ("EMG data channel");
+			% endfor
+				
+			% un ventana por cada canal
 			for i = 1:8
 				figure(i);
 				plot(time_array{i},ch_array{i});
@@ -219,11 +241,7 @@ else
 				title(strcat("channel", num2str(i-1)));
 				% title ("EMG data channel");
 			endfor
-			
-			% plot(time_vector,serial_data);
-      % xlabel ("time (s)");
-      % ylabel ("read data");
-      % title ("EMG data");
+		
     endif
     
     % mostrar tiempo total de la ejecución de script
