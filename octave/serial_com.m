@@ -177,7 +177,7 @@ else
       % almacenar el tiempo en el cual se ha obtenido el dato.
       % Se guarda tras la última posición del vector de tiempo(append)
 %      time_vector(end+1) = toc(t_start) + 0.0;
-      time_vector(end+1) = (0.0010416667*dataRead) + 0.0;
+      time_vector(end+1) = (0.086805555*dataRead) + 0.0;
       dataRead++;
     endwhile  % fin bucle recepción de puerto serie
   
@@ -210,7 +210,7 @@ else
 		% Columna 1: valores ADC
     if (dataRead != 0)
 			for i = 1:8
-				M = [time_array{1};double(ch_array{1})];
+				M = [time_array{i};double(ch_array{i})];
 				MT = M';
 				file_name = strcat("data_channel_", num2str(i-1), ".csv");
 				csvwrite(file_name,MT);
@@ -236,7 +236,7 @@ else
 			for i = 1:8
 				figure(i);
 				plot(time_array{i},ch_array{i});
-				xlabel ("time (s)");
+				xlabel ("time (ms)");
 				ylabel ("value");
 				title(strcat("channel", num2str(i-1)));
 				% title ("EMG data channel");
