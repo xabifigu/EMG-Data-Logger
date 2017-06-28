@@ -12,8 +12,13 @@ DATA_BUFFER_SIZE = 1
 # SERIAL COM
 ###################
 def serialConfig ():
+  """ 
+  @def Iniciar y configurar el puerto serie
+  @arg none
+  @return objeto de puerto serie
+  """
   s = serial.Serial()
-  s.baudrate = 115200
+  s.baudrate = 9200
   s.port = 'COM5'
   s.timeout = 1
   return s
@@ -22,6 +27,11 @@ def serialConfig ():
 # GESTIÓN DE FICHEROS
 #######################
 def openNewFileW ():
+  """ 
+  @def 
+  @arg 
+  @return 
+  """
   newFile = open ("serial_data.txt", "w")
   return newFile
 
@@ -30,20 +40,40 @@ def openNewFileW ():
 ##########################
 #
 def getHighNibbleFromByte(data):
+  """ 
+  @def 
+  @arg 
+  @return 
+  """
   x = data & 0xF0
   return (x >> 4)
 
 #
 def getLowNibbleFromByte(data):
+  """ 
+  @def 
+  @arg 
+  @return 
+  """
   return (data & 0x0F)
 
 #
 def  bytes2Word(highByte, lowByte):
+  """ 
+  @def 
+  @arg 
+  @return 
+  """
   x = highByte << 8
   return (x | lowByte)
 
 #
 def getProcessReadData(arData):
+  """ 
+  @def 
+  @arg 
+  @return 
+  """
   ch = getHighNibbleFromByte(arData[0])
 
   aux = getLowNibbleFromByte(arData[0])
@@ -52,6 +82,11 @@ def getProcessReadData(arData):
 
 #
 def getNextExpectedCh (nextCh):
+  """ 
+  @def 
+  @arg 
+  @return 
+  """
   global MAX_CHANNELS
 
   if (nextCh == (MAX_CHANNELS-1)):
@@ -62,6 +97,11 @@ def getNextExpectedCh (nextCh):
 
 #
 def searchHeader (arData):
+  """ 
+  @def 
+  @arg 
+  @return 
+  """
   # Formato de datos lo componen dos bytes XY0 Y1Y2
   # X = número de canal (4 bits)
   # Y0Y1Y2 = dato del canal (12 bits)
@@ -168,7 +208,7 @@ while True:
   x = ser.read(DATA_BUFFER_SIZE)
   if len(x) < DATA_BUFFER_SIZE:
     if len(x) != 0:
-      arTime.append(time.time() - t_start)
+      arTime.append(newDataPeriod_ms*numReadData)
       arSerialData.append(ord(x))
       numReadData = numReadData + len(x)
     else:
