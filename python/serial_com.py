@@ -19,7 +19,8 @@ def serialConfig ():
   """
   s = serial.Serial()
   s.baudrate = 9200
-  s.port = 'COM5'
+  #s.port = 'COM5'
+  s.port = 'COM10'
   s.timeout = 1
   return s
 
