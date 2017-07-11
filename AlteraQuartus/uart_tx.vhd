@@ -16,8 +16,8 @@ end uart_tx;
 architecture def of uart_tx is
 	type estado is (e0,e1,e2,e3,e4);
 	signal ep,es: estado;
---	constant temp_value	: unsigned(12 downto 0):="0000110110010"; -- 434 (115200 bauds)
-	constant temp_value	: unsigned(12 downto 0):="1010001010000"; -- 5200 (9600 bauds)
+	constant temp_value	: unsigned(12 downto 0):="0000110110010"; -- 434 (115200 bauds)
+--	constant temp_value	: unsigned(12 downto 0):="1010001010000"; -- 5200 (9600 bauds)
 	constant num_bits		:	unsigned(3 downto 0):="1010"; -- 10
 	signal fintemp	:	std_logic; 
 	signal finbits	:	std_logic;
