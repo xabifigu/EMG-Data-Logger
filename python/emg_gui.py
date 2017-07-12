@@ -8,6 +8,7 @@ class Aplicacion():
     def __init__(self):
         self.raiz = Tk()
         self.raiz.title("EMG Data Logger")
+        self.raiz.resizable(width=False,height=False)
         
         # Cambia el formato de la fuente actual a negrita para
         # resaltar las dos etiquetas que acompañan a las cajas
@@ -39,9 +40,9 @@ class Aplicacion():
         # sea presionado para validar la contraseña; y el botón
         # 'Cancelar' finalizará la aplicación si se llega a
         # presionar:
-        self.boton1 = ttk.Button(self.bottomFrame, text="Aceptar", 
+        self.boton1 = ttk.Button(self.bottomFrame, text="Start", 
                                  command=self.aceptar)
-        self.boton2 = ttk.Button(self.bottomFrame, text="Cancelar", 
+        self.boton2 = ttk.Button(self.bottomFrame, text="Exit", 
                                  command=quit)
         self.bRefresh = ttk.Button(self.topFrame, text="Refresh", 
                                  command=self.actualizarPuertos)
@@ -71,7 +72,7 @@ class Aplicacion():
 
         self.labPorts.pack(side=LEFT, fill=BOTH, expand=True,
                           padx=5, pady=5)
-        self.cbPort.pack(side=LEFT, fill=BOTH, expand=True,
+        self.cbPort.pack(side=LEFT, fill=X, expand=True,
                         padx=5, pady=5)
         self.bRefresh.pack(side=RIGHT, fill=BOTH, expand=True,
                         padx=5, pady=5)
