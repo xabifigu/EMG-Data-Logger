@@ -32,8 +32,6 @@ class App():
         self.portsList = StringVar()
         self.cbPort = ttk.Combobox(self.topFrame, textvariable=self.portsList,
                                     width=10)
-        # eventos del combobox
-        self.cbPort.bind('<<ComboboxSelected>>', self.imprimir)
 
         # definir separador
         self.separ1 = ttk.Separator(self.topFrame, orient=HORIZONTAL)
@@ -43,11 +41,11 @@ class App():
         # sea presionado para validar la contraseña; y el botón
         # 'Cancelar' finalizará la aplicación si se llega a
         # presionar:
-        self.boton1 = ttk.Button(self.bottomFrame, text="Start", 
-                                 padding=(5,5), command=self.aceptar)
-        self.boton2 = ttk.Button(self.bottomFrame, text="Exit", 
+        self.btStart = ttk.Button(self.bottomFrame, text="Start", 
+                                 padding=(5,5), command=self.start)
+        self.btExit = ttk.Button(self.bottomFrame, text="Exit", 
                                  padding=(5,5), command=quit)
-        self.bRefresh = ttk.Button(self.topFrame, text="Refresh", 
+        self.btRefresh = ttk.Button(self.topFrame, text="Refresh", 
                                  padding=(5,5), command=self.actualizarPuertos)
                                  
         # Se definen las posiciones de los widgets dentro de
@@ -94,10 +92,10 @@ class App():
 
         self.labPorts.grid(column=0, row=0, padx=5, pady=5)
         self.cbPort.grid(column=1, row=0, columnspan=2, padx=5, pady=5)
-        self.bRefresh.grid(column=3, row=0, columnspan=2, padx=5, pady=5)
+        self.btRefresh.grid(column=3, row=0, columnspan=2, padx=5, pady=5)
         self.separ1.grid(column=0, row=1, columnspan=4, padx=5, pady=5)
-        self.boton1.grid(column=1, row=0, padx=5, pady=5)
-        self.boton2.grid(column=2, row=0, padx=5, pady=5)
+        self.btStart.grid(column=1, row=0, padx=5, pady=5)
+        self.btExit.grid(column=2, row=0, padx=5, pady=5)
 
         # actualizar puertos (combobox)
         self.actualizarPuertos()
@@ -118,12 +116,9 @@ class App():
     # mensaje 'Acceso denegado' y el foco volverá al
     # mismo lugar.
     
-    def aceptar(self):
+    def start(self):
         print(self.cbPort.get())
         SerialCom(self.cbPort.get())
-
-    def imprimir(self, event):
-        print("Seleccion:" + self.cbPort.get())
 
     def actualizarPuertos(self):
         self.cbPort.set('')
