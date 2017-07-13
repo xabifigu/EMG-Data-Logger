@@ -1,14 +1,17 @@
 from tkinter import *
 from tkinter import ttk, font
 from serial.tools import list_ports
+from serial_com import SerialCom
 
 # Gestor de geometría (pack)
 
-class Aplicacion():
+class App():
     def __init__(self):
-        self.raiz = Tk()
-        self.raiz.title("EMG Data Logger")
-        self.raiz.resizable(width=False,height=False)
+        self.root = Tk()
+        self.root.title("EMG Data Logger")
+        # self.root.wm_iconbitmap(r'Upv-ehu.ico')
+        self.root.minsize(175,75)
+        self.root.resizable(width=False,height=False)
         
         # Cambia el formato de la fuente actual a negrita para
         # resaltar las dos etiquetas que acompañan a las cajas
@@ -18,17 +21,17 @@ class Aplicacion():
         fuente = font.Font(weight='bold')
         
         # Define los difrentes frames
-        self.topFrame = ttk.Frame(self.raiz)
-        self.bottomFrame = ttk.Frame(self.raiz)
+        self.topFrame = ttk.Frame(self.root, borderwidth=2,
+                               relief="raised", padding=(10,10))
+        self.bottomFrame = ttk.Frame(self.root)
 
         # define las etiquetas
-        self.labPorts = ttk.Label(self.topFrame, text="COM:",
-                                  font=fuente)
-
+        self.labPorts = ttk.Label(self.topFrame, text="COM:", padding=(5,5))
 
         # definición de Combobox
         self.portsList = StringVar()
-        self.cbPort = ttk.Combobox(self.topFrame, textvariable=self.portsList)
+        self.cbPort = ttk.Combobox(self.topFrame, textvariable=self.portsList,
+                                    width=10)
         # eventos del combobox
         self.cbPort.bind('<<ComboboxSelected>>', self.imprimir)
 
@@ -41,11 +44,11 @@ class Aplicacion():
         # 'Cancelar' finalizará la aplicación si se llega a
         # presionar:
         self.boton1 = ttk.Button(self.bottomFrame, text="Start", 
-                                 command=self.aceptar)
+                                 padding=(5,5), command=self.aceptar)
         self.boton2 = ttk.Button(self.bottomFrame, text="Exit", 
-                                 command=quit)
+                                 padding=(5,5), command=quit)
         self.bRefresh = ttk.Button(self.topFrame, text="Refresh", 
-                                 command=self.actualizarPuertos)
+                                 padding=(5,5), command=self.actualizarPuertos)
                                  
         # Se definen las posiciones de los widgets dentro de
         # la ventana. Todos los controles se van colocando 
@@ -67,21 +70,34 @@ class Aplicacion():
         # vertical a los widgets para separarlos entre sí y de 
         # los bordes de la ventana. Hay otras equivalentes que
         # añaden espacio extra interno: 'ipàdx' y 'ipady':
-        self.topFrame.pack()
-        self.bottomFrame.pack(side=BOTTOM)
 
-        self.labPorts.pack(side=LEFT, fill=BOTH, expand=True,
-                          padx=5, pady=5)
-        self.cbPort.pack(side=LEFT, fill=X, expand=True,
-                        padx=5, pady=5)
-        self.bRefresh.pack(side=RIGHT, fill=BOTH, expand=True,
-                        padx=5, pady=5)
-        self.separ1.pack(side=TOP, fill=BOTH, expand=True, 
-                         padx=5, pady=5)
-        self.boton1.pack(side=LEFT, fill=BOTH, expand=True, 
-                         padx=5, pady=5)
-        self.boton2.pack(side=RIGHT, fill=BOTH, expand=True, 
-                         padx=5, pady=5)
+        # USANDO PACK
+        # self.topFrame.pack()
+        # self.bottomFrame.pack(side=BOTTOM)
+
+        # self.labPorts.pack(side=LEFT, fill=BOTH, expand=True,
+        #                   padx=5, pady=5)
+        # self.cbPort.pack(side=LEFT, fill=X, expand=True,
+        #                 padx=5, pady=5)
+        # self.bRefresh.pack(side=RIGHT, fill=BOTH, expand=True,
+        #                 padx=5, pady=5)
+        # self.separ1.pack(side=BOTTOM, fill=BOTH, expand=True, 
+        #                  padx=5, pady=5)
+        # self.boton1.pack(side=LEFT, fill=BOTH, expand=True, 
+        #                  padx=5, pady=5)
+        # self.boton2.pack(side=RIGHT, fill=BOTH, expand=True, 
+        #                  padx=5, pady=5)
+
+        # USANDO GRID
+        self.topFrame.grid(column=0, row=0, padx=5, pady=5)
+        self.bottomFrame.grid(column=0, row=1, padx=5, pady=5)
+
+        self.labPorts.grid(column=0, row=0, padx=5, pady=5)
+        self.cbPort.grid(column=1, row=0, columnspan=2, padx=5, pady=5)
+        self.bRefresh.grid(column=3, row=0, columnspan=2, padx=5, pady=5)
+        self.separ1.grid(column=0, row=1, columnspan=4, padx=5, pady=5)
+        self.boton1.grid(column=1, row=0, padx=5, pady=5)
+        self.boton2.grid(column=2, row=0, padx=5, pady=5)
 
         # actualizar puertos (combobox)
         self.actualizarPuertos()
@@ -91,7 +107,7 @@ class Aplicacion():
         # a la caja de entrada de la contraseña para que se
         # pueda empezar a escribir directamente:
         
-        self.raiz.mainloop()
+        self.root.mainloop()
     
     # El método 'aceptar' se emplea para validar la 
     # contraseña introducida. Será llamado cuando se 
@@ -104,6 +120,7 @@ class Aplicacion():
     
     def aceptar(self):
         print(self.cbPort.get())
+        SerialCom(self.cbPort.get())
 
     def imprimir(self, event):
         print("Seleccion:" + self.cbPort.get())
@@ -122,7 +139,7 @@ class Aplicacion():
         self.cbPort.set(listPorts[0])
 
 def main():
-    mi_app = Aplicacion()
+    mi_app = App()
     return 0
 
 if __name__ == '__main__':

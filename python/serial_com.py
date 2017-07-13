@@ -11,7 +11,7 @@ DATA_BUFFER_SIZE = 1
 ###################
 # SERIAL COM
 ###################
-def serialConfig ():
+def serialConfig (serialPort):
   """ 
   @def Iniciar y configurar el puerto serie
   @arg none
@@ -19,8 +19,8 @@ def serialConfig ():
   """
   s = serial.Serial()
   s.baudrate = 9200
-  #s.port = 'COM5'
-  s.port = 'COM10'
+  s.port = serialPort
+  # s.port = 'COM7'
   s.timeout = 1
   return s
 
@@ -167,166 +167,179 @@ def searchHeader (arData):
 ##################
 # MAIN
 ##################
-# constantes
-# MAX_CHANNELS = 8
-# DATA_BUFFER_SIZE = 1
+class SerialCom():
 
-print (time.time())
+  MAX_CHANNELS = 8
+  DATA_BUFFER_SIZE = 1
 
-# inicializar y abrir puerto serie
-ser = serialConfig()
+  def __init__(self, comPort='COM7'):
+      
+    print (time.time())
 
-# tiempo entre cada dato: 
-# tiempo entre cada bit = 1/baudrate
-# número de bit por dato = 10
-# Dato en milisegundos
-newDataPeriod_ms = ((1 / ser.baudrate) * 10) * 1000
+    # inicializar y abrir puerto serie
+    ser = serialConfig(comPort)
 
-ser.open()
+    # tiempo entre cada dato: 
+    # tiempo entre cada bit = 1/baudrate
+    # número de bit por dato = 10
+    # Dato en milisegundos
+    newDataPeriod_ms = ((1 / ser.baudrate) * 10) * 1000
 
-# OBTENER DATOS
-# obetener datos del puerto serie hasta que no se reciban más datos
-arSerialData = [None]
-arTime = [None]
-numReadData = 0
+    try:
+      ser.open()
+    except:
+      print('Error abriendo puerto serie')
 
-t_start = time.time()
+    # OBTENER DATOS
+    # obetener datos del puerto serie hasta que no se reciban más datos
+    arSerialData = [None]
+    arTime = [None]
+    numReadData = 0
 
-# while True:
-#   x = ser.read(255)
-#   y = ord(x)
-#   if len(x) < 255:
-#     if len(x) != 0:
-#       arSerialData = np.concatenate((arSerialData,x))
-#     else:
-#       pass
-#     print ("No more data")
-#     break
-#   else:
-#     arSerialData = np.concatenate((arSerialData,x))
+    t_start = time.time()
 
-while True:
-  x = ser.read(DATA_BUFFER_SIZE)
-  if len(x) < DATA_BUFFER_SIZE:
-    if len(x) != 0:
-      arTime.append(newDataPeriod_ms*numReadData)
-      arSerialData.append(ord(x))
-      numReadData = numReadData + len(x)
+    # while True:
+    #   x = ser.read(255)
+    #   y = ord(x)
+    #   if len(x) < 255:
+    #     if len(x) != 0:
+    #       arSerialData = np.concatenate((arSerialData,x))
+    #     else:
+    #       pass
+    #     print ("No more data")
+    #     break
+    #   else:
+    #     arSerialData = np.concatenate((arSerialData,x))
+
+    while True:
+      x = ser.read(DATA_BUFFER_SIZE)
+      if len(x) < DATA_BUFFER_SIZE:
+        if len(x) != 0:
+          arTime.append(newDataPeriod_ms*numReadData)
+          arSerialData.append(ord(x))
+          numReadData = numReadData + len(x)
+        else:
+          pass
+        print ("No more data")
+        break
+      else:
+        arTime.append(newDataPeriod_ms*numReadData)
+        arSerialData.append(ord(x))
+        numReadData += DATA_BUFFER_SIZE
+
+    if not (ser.closed):
+      ser.close()
+      
+    print ("Data received")
+    print ("Número de datos: " + str(len(arSerialData)-1))
+
+    # PROCESAR DATOS
+    if (numReadData != 0):
+      # eliminar el primer item del array, ya que no es válido
+      del arSerialData[0]
+      del arTime[0]
+      # obtener el primer byte válido
+      startByte = searchHeader(arSerialData)
+      # separa los datos según el canal leído
+      index = startByte
+      # crear matrices para almacenar los datos
+      matrixCh = [[0 for x in range(1)] for y in range(MAX_CHANNELS)]
+      matrixTime = [[0 for x in range(1)] for y in range(MAX_CHANNELS)]
+      while (index < (numReadData-1)):
+        # recoger datos
+        currentData = arSerialData[index:index+2]
+        chNum, adcValue = getProcessReadData(currentData)
+
+        # comprobar que se leído un canal correcto
+        # La matriz se creó antes de ser usada, por lo que las columnas ya
+        # tienen un elemento.
+        # Los siguientes datos se guardan usando 'append'
+        if chNum < MAX_CHANNELS:
+          matrixCh[chNum].append(adcValue)
+          matrixTime[chNum].append(arTime[index])
+          index += 2
+        else:
+          # el canal leído no es correcto.
+          # puede que la lectura se haya desincronizado, por lo que
+          # se vuelve a buscar dato correcto: se apunta directamente al
+          # siguiente elemento de la lista
+          index += 1
+          pass
+
+      
+      # se elimina el primer dato de cada matriz 
+      # (primer elemento usado para creación de matriz)
+      for i in range (0, MAX_CHANNELS):
+        del matrixCh[i][0]
+        del matrixTime[i][0]
+
     else:
       pass
-    print ("No more data")
-    break
-  else:
-    arTime.append(newDataPeriod_ms*numReadData)
-    arSerialData.append(ord(x))
-    numReadData += DATA_BUFFER_SIZE
 
-if not (ser.closed):
-  ser.close()
-  
-print ("Data received")
-print ("Número de datos: " + str(len(arSerialData)-1))
 
-# PROCESAR DATOS
-if (numReadData != 0):
-  # eliminar el primer item del array, ya que no es válido
-  del arSerialData[0]
-  del arTime[0]
-  # obtener el primer byte válido
-  startByte = searchHeader(arSerialData)
-  # separa los datos según el canal leído
-  index = startByte
-  # crear matrices para almacenar los datos
-  matrixCh = [[0 for x in range(1)] for y in range(MAX_CHANNELS)]
-  matrixTime = [[0 for x in range(1)] for y in range(MAX_CHANNELS)]
-  while (index < (numReadData-1)):
-    # recoger datos
-    currentData = arSerialData[index:index+2]
-    chNum, adcValue = getProcessReadData(currentData)
-
-    # comprobar que se leído un canal correcto
-    # La matriz se creó antes de ser usada, por lo que las columnas ya
-    # tienen un elemento.
-    # Los siguientes datos se guardan usando 'append'
-    if chNum < MAX_CHANNELS:
-      matrixCh[chNum].append(adcValue)
-      matrixTime[chNum].append(arTime[index])
-      index += 2
+    # GUARDAR LOS DATOS
+    # los datos se guardan en CSV:
+    # Columna 0: tiempo
+    # Columna 1: valores ADC
+    if (numReadData != 0):
+      for i in range (0, MAX_CHANNELS):
+        M = np.asarray([ matrixTime[i], matrixCh[i] ])
+        MT = np.transpose(M)
+        fileName = "data_channel_" + str(i) + ".csv"
+        np.savetxt(fileName, MT, delimiter=",")
     else:
-      # el canal leído no es correcto.
-      # puede que la lectura se haya desincronizado, por lo que
-      # se vuelve a buscar dato correcto: se apunta directamente al
-      # siguiente elemento de la lista
-      index += 1
       pass
 
-  
-  # se elimina el primer dato de cada matriz 
-  # (primer elemento usado para creación de matriz)
-  for i in range (0, MAX_CHANNELS):
-    del matrixCh[i][0]
-    del matrixTime[i][0]
+    # F = openNewFileW()
+    # F.write(str(arSerialData))
+    # if not (F.closed):
+    #   F.close()
 
-else:
-  pass
-
-
-# GUARDAR LOS DATOS
-# los datos se guardan en CSV:
-# Columna 0: tiempo
-# Columna 1: valores ADC
-if (numReadData != 0):
-  for i in range (0, MAX_CHANNELS):
-    M = np.asarray([ matrixTime[i], matrixCh[i] ])
-    MT = np.transpose(M)
-    fileName = "data_channel_" + str(i) + ".csv"
-    np.savetxt(fileName, MT, delimiter=",")
-else:
-  pass
-
-# F = openNewFileW()
-# F.write(str(arSerialData))
-# if not (F.closed):
-#   F.close()
-
-# MOSTRAR DATOS
-# mostrar gráfica de los datos obtenidos, siempre y cuando se haya
-# recibido al menos un dato
-if (numReadData != 0):
-  for i in range (0, MAX_CHANNELS):
-    fig = plt.figure(i)
-    plt.plot(matrixTime[i],matrixCh[i])
-    title = 'Channel ' + str(i) 
-    fig.suptitle(title, fontsize=18)
-    plt.xlabel('time (ms)')
-    plt.ylabel('value')
-  plt.show()
+    # MOSTRAR DATOS
+    # mostrar gráfica de los datos obtenidos, siempre y cuando se haya
+    # recibido al menos un dato
+    if (numReadData != 0):
+      for i in range (0, MAX_CHANNELS):
+        fig = plt.figure(i)
+        plt.plot(matrixTime[i],matrixCh[i])
+        title = 'Channel ' + str(i) 
+        fig.suptitle(title, fontsize=18)
+        plt.xlabel('time (ms)')
+        plt.ylabel('value')
+      plt.show()
 
 
 
-  # # Three subplots sharing both x/y axes
-  # f, (ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8) = plt.subplots(8, sharex=True, sharey=True)
-  # # x = matrixTime[1]
-  # ax1.plot(matrixTime[0], matrixCh[0])
-  # ax1.set_title('Sharing both axes')
-  # ax2.scatter(matrixTime[1], matrixCh[1])
-  # ax3.scatter(matrixTime[2], matrixCh[2], color='r')
-  # ax4.scatter(matrixTime[3], matrixCh[3], color='g')
-  # ax5.scatter(matrixTime[4], matrixCh[4])
-  # ax6.scatter(matrixTime[5], matrixCh[5], color='r')
-  # ax7.scatter(matrixTime[6], matrixCh[6], color='g')
-  # ax8.scatter(matrixTime[7], matrixCh[7])
+      # # Three subplots sharing both x/y axes
+      # f, (ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8) = plt.subplots(8, sharex=True, sharey=True)
+      # # x = matrixTime[1]
+      # ax1.plot(matrixTime[0], matrixCh[0])
+      # ax1.set_title('Sharing both axes')
+      # ax2.scatter(matrixTime[1], matrixCh[1])
+      # ax3.scatter(matrixTime[2], matrixCh[2], color='r')
+      # ax4.scatter(matrixTime[3], matrixCh[3], color='g')
+      # ax5.scatter(matrixTime[4], matrixCh[4])
+      # ax6.scatter(matrixTime[5], matrixCh[5], color='r')
+      # ax7.scatter(matrixTime[6], matrixCh[6], color='g')
+      # ax8.scatter(matrixTime[7], matrixCh[7])
 
-  # # Fine-tune figure; make subplots close to each other and hide x ticks for
-  # # all but bottom plot.
-  # f.subplots_adjust(hspace=0)
-  # plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
-  # plt.show()
+      # # Fine-tune figure; make subplots close to each other and hide x ticks for
+      # # all but bottom plot.
+      # f.subplots_adjust(hspace=0)
+      # plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+      # plt.show()
 
-else:
-  pass
+    else:
+      pass
 
 
-t_elapsed = time.time() - t_start
-print(t_elapsed)
-# print(process_time())
+    t_elapsed = time.time() - t_start
+    print(t_elapsed)
+    # print(process_time())
+
+def main():
+    serialCom = SerialCom()
+    return 0
+
+if __name__ == '__main__':
+    main()
