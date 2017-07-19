@@ -11,14 +11,14 @@ DATA_BUFFER_SIZE = 1
 ###################
 # SERIAL COM
 ###################
-def serialConfig (serialPort):
+def serialConfig (serialPort, bauds):
   """ 
   @def Iniciar y configurar el puerto serie
   @arg none
   @return objeto de puerto serie
   """
   s = serial.Serial()
-  s.baudrate = 9200
+  s.baudrate = bauds
   s.port = serialPort
   # s.port = 'COM7'
   s.timeout = 1
@@ -172,12 +172,12 @@ class SerialCom():
   MAX_CHANNELS = 8
   DATA_BUFFER_SIZE = 1
 
-  def __init__(self, comPort='COM7'):
+  def __init__(self, comPort='COM7', bauds=9600):
       
     print (time.time())
 
     # inicializar y abrir puerto serie
-    ser = serialConfig(comPort)
+    ser = serialConfig(comPort, bauds)
 
     # tiempo entre cada dato: 
     # tiempo entre cada bit = 1/baudrate
