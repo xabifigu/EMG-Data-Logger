@@ -93,9 +93,11 @@ begin
 	-------------------------- 
 	
 	--Biestable D
-	process (iCLK, iTX_ACK)
+	process (iCLK, iRESET, iTX_ACK)
 		begin
-			if rising_edge(iCLK) then  
+			if iRESET = '1' then
+				tx_ack <= '0';
+			elsif rising_edge(iCLK) then  
 				if iTX_ACK = '1' then tx_ack <= '1'; 
 				else tx_ack <= '0'; 
 				end if;  
@@ -104,9 +106,11 @@ begin
 	
 	------------------------
 	-- Registro dato de ADC
-	process (iCLK, ld_data)
+	process (iCLK, iRESET, ld_data)
 		begin
-			if rising_edge(iCLK) then  
+			if iRESET = '1' then
+				adc_data <= X"000";
+			elsif rising_edge(iCLK) then  
 				if ld_data = '1' then 
 					adc_data <= iVALUE; 
 				end if;  
@@ -115,9 +119,11 @@ begin
 	
 	------------------------
 	-- Registro canal muestreado
-	process (iCLK, ld_adc_ch)
+	process (iCLK, iRESET, ld_adc_ch)
 		begin
-			if rising_edge(iCLK) then  
+			if iRESET = '1' then
+				adc_ch <= "000";
+			elsif rising_edge(iCLK) then  
 				if ld_adc_ch = '1' then adc_ch <= iADC_CH; 
 				end if;  
 			end if; 
@@ -156,9 +162,11 @@ begin
 	-- Registro de desplazamiento izquierda (16 bits)
 		-- Byte a enviar por UART.
 		-- Primero envía byte más significativo.
-	process (iCLK, ld_reg, shift_reg)
+	process (iCLK, iRESET, ld_reg, shift_reg)
 	begin
-		if rising_edge(iCLK) then 
+		if iRESET = '1' then
+			bits_to_send <= X"0000";
+		elsif rising_edge(iCLK) then 
 			if ld_reg = '1' then	
 				-- bit 15:			irrelevante
 				-- bit 12..14:	canal muestreado
@@ -176,11 +184,6 @@ begin
 
 	-- byte a enviar por uart
 	oBYTE <= bits_to_send (15 downto 8); 
-	
-	-- byte_to_send (7 downto 0) <= bits_to_send (15 downto 8); 
-	
-	-- -- byte a enviar por uart
-	-- oBYTE <= byte_to_send;
 	
 	-- UART puede enviar
 	oTX_ON <= tx_on;

@@ -61,7 +61,7 @@ BEGIN
         for I in 0 to 15 loop   
 					iVALUE	<= std_logic_vector(to_unsigned(TEMP,12));
 					iADC_CH <= iADC_CH + "001";					
-					TEMP		<= TEMP + 234;	
+					TEMP		<= TEMP + 234;	-- se añade un valor aleatorio
           wait for 100 ns;
           iTX_ACK	<= '1';
           wait for 40 ns;
