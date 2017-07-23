@@ -48,29 +48,35 @@ BEGIN
 			iCLK <= not iCLK after 20 ns;
 
       process
-        begin
+      begin
 				
         wait for 100 ns;
         iRESET	<= '0';
 				TEMP 		<= 123;
-				-- -- wait for 100 ns;
-				-- -- iVALUE <= X"123";	
 				
-				 wait for 140 ns;	
+        wait for 140 ns;	
 		
-        for I in 0 to 15 loop   
+        for I in 0 to 15 loop
+          wait for 400 ns;   
 					iVALUE	<= std_logic_vector(to_unsigned(TEMP,12));
 					iADC_CH <= iADC_CH + "001";					
 					TEMP		<= TEMP + 234;	-- se añade un valor aleatorio
-          wait for 100 ns;
-          iTX_ACK	<= '1';
-          wait for 40 ns;
-					iTX_ACK	<= '0';
         end loop;
 
 				wait;		-- wait forever   
 				
       end process;   
+
+      process
+      begin
+        while True loop
+          wait for 100 ns;
+          iTX_ACK	<= '1';
+          wait for 40 ns;
+          iTX_ACK	<= '0';
+        end loop;
+
+      end process;
 			
 END ; 
 

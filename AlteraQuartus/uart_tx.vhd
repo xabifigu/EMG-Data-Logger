@@ -16,9 +16,11 @@ end uart_tx;
 architecture def of uart_tx is
 	type estado is (e0,e1,e2,e3,e4);
 	signal ep,es: estado;
-	constant temp_value	: unsigned(12 downto 0):="0000110110010"; -- 434 (115200 bauds)
---	constant temp_value	: unsigned(12 downto 0):="1010001010000"; -- 5200 (9600 bauds)
+--	constant temp_value	: unsigned(12 downto 0):="0000110110010"; -- 434 (115200 bauds)
+	constant temp_value	: unsigned(12 downto 0):="1010001010000"; -- 5200 (9600 bauds)
+--	constant temp_value	: unsigned(12 downto 0):="0000000000011"; -- 3 -> constante para test
 	constant num_bits		:	unsigned(3 downto 0):="1010"; -- 10
+--	constant num_bits		:	unsigned(3 downto 0):="0010"; -- 2 -> constante para test
 	signal fintemp	:	std_logic; 
 	signal finbits	:	std_logic;
 	signal ldtemp		:	std_logic;
@@ -97,15 +99,16 @@ architecture def of uart_tx is
 	fintemp<='1' when temp=0 else '0';
 
 	-- registro para sacar los bits a enviar, para pasar de paralelo a serie
-	process (iCLK, ldbyte, despbit)
+	process (iCLK, iRESET, ldbyte, despbit)
 	begin
-		if rising_edge(iCLK) then 
+		if iRESET = '1' then
+				bytereg <= (others=>'0');
+		elsif rising_edge(iCLK) then 
 			if ldbyte='1' then
 				bytereg(9) <= '1'; -- stop bit
 				bytereg(8 downto 1) <= iDATA; -- dato
 				bytereg(0) <= '0'; -- start bit
 			elsif despbit='1' then 
-				-- bytereg(9)<=bytereg(0);
 				for I in 0 to 8 loop
 					bytereg(I)<=bytereg(I+1);
 				end loop;
