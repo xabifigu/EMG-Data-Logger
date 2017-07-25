@@ -8,6 +8,13 @@
 # !.vscode/launch.json
 # !.vscode/extensions.json
 
+output_files/
+drafts/
+testGraph/
+__pycache__/
+
 *.csv
+
+
 
 # End of https://www.gitignore.io/api/visualstudiocode

@@ -16,9 +16,11 @@ end rs232_tx;
 architecture def of rs232_tx is
 	type estado is (e0,e1,e2,e3,e4);
 	signal ep,es: estado;
---	constant T:						std_logic_vector(12 downto 0):="1010001010000"; -- 5200
-	constant temp_value	: unsigned(12 downto 0):="0000110110010"; -- 434
+--	constant temp_value	: unsigned(12 downto 0):="0000110110010"; -- 434 (115200 bauds)
+	constant temp_value	: unsigned(12 downto 0):="1010001010000"; -- 5200 (9600 bauds)
+--	constant temp_value	: unsigned(12 downto 0):="0000000000011"; -- 3 -> constante para test
 	constant num_bits		:	unsigned(3 downto 0):="1010"; -- 10
+--	constant num_bits		:	unsigned(3 downto 0):="0010"; -- 2 -> constante para test
 	signal fintemp	:	std_logic; 
 	signal finbits	:	std_logic;
 	signal ldtemp		:	std_logic;
@@ -33,10 +35,6 @@ architecture def of rs232_tx is
 	signal start		:	std_logic;
 	signal tx_ack		:	std_logic;
 	signal tx_idle	:	std_logic;
-	
-	-- TDOD: remove
-	signal debug_byte: unsigned(7 downto 0):="00000000";
-
 
 	begin
 
@@ -78,9 +76,11 @@ architecture def of rs232_tx is
 	----UNIDAD DE PROCESO-----
 	--------------------------
 	--Biestable D
-	process (iCLK, iSTART_TX)
+	process (iCLK, iRESET, iSTART_TX)
 		begin
-			if rising_edge(iCLK) then  
+			if iRESET = '1' then
+				start <= '0';
+			elsif rising_edge(iCLK) then  
 				if iSTART_TX='1' then start<='1'; 
 				else start<='0'; 
 				end if;  
@@ -99,19 +99,16 @@ architecture def of rs232_tx is
 	fintemp<='1' when temp=0 else '0';
 
 	-- registro para sacar los bits a enviar, para pasar de paralelo a serie
-	process (iCLK, ldbyte, despbit)
+	process (iCLK, iRESET, ldbyte, despbit)
 	begin
-		if rising_edge(iCLK) then 
+		if iRESET = '1' then
+				bytereg <= (others=>'0');
+		elsif rising_edge(iCLK) then 
 			if ldbyte='1' then
 				bytereg(9) <= '1'; -- stop bit
-	-- DEBUG ON
-	--			bytereg(8 downto 1) <= iDATA; -- dato
-				bytereg(8 downto 1) <= std_logic_vector(debug_byte); -- dato
-				debug_byte <= debug_byte + 1;
-	-- OFF
+				bytereg(8 downto 1) <= iDATA; -- dato
 				bytereg(0) <= '0'; -- start bit
 			elsif despbit='1' then 
-				-- bytereg(9)<=bytereg(0);
 				for I in 0 to 8 loop
 					bytereg(I)<=bytereg(I+1);
 				end loop;
