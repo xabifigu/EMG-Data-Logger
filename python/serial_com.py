@@ -172,7 +172,7 @@ class SerialCom():
   MAX_CHANNELS = 8
   DATA_BUFFER_SIZE = 1
 
-  def __init__(self, comPort='COM7', bauds=9600):
+  def __init__(self, comPort='COM8', bauds=9600):
       
     print (time.time())
 
