@@ -8,10 +8,11 @@
 # !.vscode/launch.json
 # !.vscode/extensions.json
 
+__pycache__/
 output_files/
 drafts/
 testGraph/
-__pycache__/
+*/__pycache__/
 
 *.csv
 
