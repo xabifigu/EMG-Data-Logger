@@ -34,6 +34,7 @@ class serPort():
       print('Error abriendo puerto serie')
 
     # sincronizar datos del puerto serie
+    # Se busca leer el número de canal de manera consecutiva
     if isSerialOpen == True:
       numberReadCh = 0
       nextCh = 0
@@ -45,36 +46,37 @@ class serPort():
       while numberReadCh < self.MAX_CHANNELS:
         # leer dato y obtener el número de canal
         x = ser.read()
-        # numberOfCh = 99
         # si no se leyó ningún dato, se acaba el bucle
         if len(x) < 1:
           isSerialOpen = False
           break
         if dataWithCh is True:
+          # Se espera que el dato leído contenga número de canal
           numberOfCh = self.getHighNibbleFromByte(ord(x))
           if numberOfCh == 0:
+            # Todavía no se ha leído un canal válido,
+            # por lo que el primer canal leído, será el canal esperado
             nextCh = numberOfCh
           else:
             pass
+          # El canal es válido sólo si es un número válido,
+          # y es el canal esperado
           if numberOfCh < self.MAX_CHANNELS and numberOfCh == nextCh:
-            dataWithCh = False
-            numberReadCh += 1
+            dataWithCh = False  # No se espera canal en el siguiente dato
+            numberReadCh += 1   # Se incrementa el número de canales leídos
             if nextCh == (self.MAX_CHANNELS-1):
               nextCh = 0
             else:
               nextCh = numberOfCh+1
             print ('Correcto: ' + str(numberOfCh))
           else:
-            # no se ha leído un número válido
+            # no se ha leído un número válido, resetear contador
             numberReadCh = 0
-            # nextCh = 0
-            # numberOfCh = 55
             print('Canal no válido: ' + str(numberOfCh))
         else:
+          # En el siguiente dato se espera leer canal
           dataWithCh = True
           print('Canal no esperado')
-      
-        # print (str(numberOfCh))
     else:
       pass
 
@@ -83,16 +85,27 @@ class serPort():
       x = ser.read()
       cnt = 0
       cntCh0 = 0
+      numReadData = 0
       while True:
+        # Los datos se leen de dos en dos bytes:
+        #   1. byte: ch + data
+        #   2. byte: data
         arr = ser.read(2)
+        # si no se leen datos, se acaba el bucle
         if len(arr) < 2:
           print ("No more data")
           break
         else:
+          # Se procesan los datos recibidos para obtener
+          # el número de canal y el valor correspondiente
+          timeData = newDataPeriod_ms*numReadData
+          numReadData += 2
           chNum, adcValue = self.getProcessReadData(arr)
+          dataToSend = [timeData,adcValue]
           if chNum == 0:
             if q.empty():
-              q.put(adcValue)
+              # q.put(adcValue)
+              q.put(dataToSend)
             cntCh0 += 1
           else:
             pass      
@@ -128,6 +141,7 @@ class serPort():
     # else:
     #   pass
     
+    # Cerrar puerto serie
     if not (ser.closed):
       ser.close()
     print ('Fin recepción datos!')
