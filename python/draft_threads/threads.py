@@ -22,29 +22,28 @@ from grafica import setPlot
 
 
 
-queue = [None]
+# queue = [None]
+# for i in range (0, 2):
+#   queue.append(Queue(maxsize=0))
+# del queue[0]
 
-for i in range (0, 2):
-  queue.append(Queue(maxsize=0))
-
-del queue[0]
-
-# queue = Queue(maxsize=0)
+queue = Queue(maxsize=0)
 
 
-# thread1 = Thread( target=serPort, args=("Thread-1", queue) )
 thread1 = Thread( target=SerialCom, args=("Thread-1", queue) )
-thread2 = Thread( target=setPlot, args=("Thread-2", queue[0], 0) )
-thread3 = Thread( target=setPlot, args=("Thread-3", queue[1], 1) )
+thread2 = Thread( target=setPlot, args=("Thread-2", queue, 0) )
+
+# thread2 = Thread( target=setPlot, args=("Thread-2", queue[0], 0) )
+# thread3 = Thread( target=setPlot, args=("Thread-3", queue[1], 1) )
 
 thread1.daemon = True
 thread2.daemon = True
-thread3.daemon = True
+# thread3.daemon = True
 
 thread1.start()
 thread2.start()
-thread3.start()
+# thread3.start()
 
 thread1.join()
 thread2.join()
-thread3.join()
+# thread3.join()

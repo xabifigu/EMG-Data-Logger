@@ -75,6 +75,8 @@ class setPlot():
       return self.line,
 
   def startAnimation(self):
+    # self.fig = plt.figure(self.chToShow)
+
     self.fig, self.ax = plt.subplots()
     self.line, = self.ax.plot([], [], lw=2)
     self.ax.grid()

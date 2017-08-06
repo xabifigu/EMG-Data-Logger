@@ -281,27 +281,29 @@ class SerialCom():
             pass
 
           dataToSend = [timeData,adcValue]
-          # if chNum == 0:
-          #   if q.empty():
-          #     # q.put(adcValue)
-          #     q.put(dataToSend)
-          #   cntCh0 += 1
-          # else:
-          #   pass    
+
           if chNum == 0:
-            if q[0].empty():
+            if q.empty():
               # q.put(adcValue)
-              q[0].put(dataToSend)
+              q.put(dataToSend)
             cntCh0 += 1
           else:
-            pass  
-
-          if chNum == 1:
-            if q[1].empty():
-              # q.put(adcValue)
-              q[1].put(dataToSend)
-          else:
             pass   
+
+          # if chNum == 0:
+          #   if q[0].empty():
+          #     # q.put(adcValue)
+          #     q[0].put(dataToSend)
+          #   cntCh0 += 1
+          # else:
+          #   pass  
+
+          # if chNum == 1:
+          #   if q[1].empty():
+          #     # q.put(adcValue)
+          #     q[1].put(dataToSend)
+          # else:
+          #   pass   
 
           cnt += 1 
           print("Serial: " + str(cnt) + " Ch0: " + str(cntCh0))
@@ -310,8 +312,9 @@ class SerialCom():
     else:
       pass
 
-    q[0].put(None)
-    q[1].put(None)
+    q.put(None)
+    # q[0].put(None)
+    # q[1].put(None)
 
 
 
