@@ -7,14 +7,19 @@ from emgPlot import SetPlot
 
 
 class ThreadsApp():
-  def __init__(self, nChannes=1):
+  def __init__(self, nChannels=8, nCh2Show=1,
+              comPort='COM8', bauds=9600,
+              outFolder='.\\'):
 
     q = []
-    for i in range (0, nChannes):
+    for i in range (0, nCh2Show):
       q.append(Queue(maxsize=0))
 
-    thread1 = Thread( target=SerialCom, args=("Serial Com", q, nChannes) )
-    thread2 = Thread( target=SetPlot, args=("Plots", q, nChannes) )
+    thread1 = Thread( target=SerialCom, args=("Serial Com", q, 
+                                              nChannels, nCh2Show,
+                                              comPort, bauds,
+                                              outFolder) )
+    thread2 = Thread( target=SetPlot, args=("Plots", q, nCh2Show) )
 
     thread1.daemon = True
     thread2.daemon = True
@@ -26,7 +31,7 @@ class ThreadsApp():
     thread2.join()
 
 def main():
-  plot = ThreadsApp(8)
+  plot = ThreadsApp()
   return 0
 
 if __name__ == '__main__':

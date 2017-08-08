@@ -6,17 +6,17 @@ from threading import Thread
 from multiprocessing import Queue
 
 class SetPlot():
-  def __init__(self, name, q, num):
+  def __init__(self, name, q, nCh2Show=1):
     self.q = q
-    self.chToShow = num
-    self.nbCh = num
+    # self.chToShow = nCh2Show
+    self.nCh2Show = nCh2Show
     self.startAnimation()
 
   def data_gen(self, t=0):
     cnt = 0
     x = []
 
-    for i in range (0, self.nbCh):
+    for i in range (0, self.nCh2Show):
       x.append(None)
       x[i] = [0,0]
 
@@ -27,7 +27,7 @@ class SetPlot():
       # el dato recibido es un array de dos simiensiones:
       # x[i][0]: tiempo en milisegundos
       # x[i][1]: dato ADC
-      for i in range(0, self.nbCh):
+      for i in range(0, self.nCh2Show):
         if not self.q[i].empty():
           x[i] = self.q[i].get()
         
@@ -45,7 +45,7 @@ class SetPlot():
       yield x
 
   def init(self):
-    for i in range(0, self.nbCh):
+    for i in range(0, self.nCh2Show):
       self.arAx[i].set_ylim(0, 4250)
       self.arAx[i].set_xlim(0, 2000)
 
@@ -58,7 +58,7 @@ class SetPlot():
 
   def run(self, data):
       # update the data
-      for i in range(0, self.nbCh):
+      for i in range(0, self.nCh2Show):
         t, y = data[i]
         self.arDataX[i].append(t)
         self.arDataY[i].append(y)
@@ -84,7 +84,7 @@ class SetPlot():
     title = 'EMG Data'
     fig.suptitle(title, fontsize=18)
 
-    for i in range(0, self.nbCh):
+    for i in range(0, self.nCh2Show):
       self.arAx.append(None)
       self.arLine.append(None)
       self.arDataX.append(None)
@@ -92,9 +92,9 @@ class SetPlot():
 
       # todos los bubplots comparte el eje x
       if i is 0:
-        self.arAx[i] = fig.add_subplot(self.nbCh, 1, i+1)
+        self.arAx[i] = fig.add_subplot(self.nCh2Show, 1, i+1)
       else:
-        self.arAx[i] = fig.add_subplot(self.nbCh, 1, i+1, sharex=self.arAx[0])
+        self.arAx[i] = fig.add_subplot(self.nCh2Show, 1, i+1, sharex=self.arAx[0])
       self.arAx[i].set_xlabel('t(ms)')
       self.arAx[i].set_ylabel('ch ' + str(i))
       self.arAx[i].grid()
@@ -114,7 +114,7 @@ def main():
   q = []
   q.append(Queue())
   q[0].put(None)
-  plot = SetPlot(name, q, 3)
+  plot = SetPlot(name, q)
   return 0
 
 if __name__ == '__main__':

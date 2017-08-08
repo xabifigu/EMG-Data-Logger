@@ -172,7 +172,12 @@ class SerialCom():
   MAX_CHANNELS = 8
   DATA_BUFFER_SIZE = 1
 
-  def __init__(self, name, q, nChannels=1, comPort='COM8', bauds=9600):
+  def __init__(self, name, q, 
+              nChannels=8, nCh2Show=1, 
+              comPort='COM8', bauds=9600,
+              outFolder='.\\'):
+
+    MAX_CHANNELS = nChannels
       
     print (time.time())
 
@@ -305,7 +310,7 @@ class SerialCom():
           # else:
           #   pass   
 
-          if chNum < nChannels:
+          if chNum < nCh2Show:
             if q[chNum].empty():
               # q.put(adcValue)
               q[chNum].put(dataToSend)
@@ -326,7 +331,7 @@ class SerialCom():
     # q[0].put(None)
     # q[1].put(None)
 
-    for i in range (0, nChannels):
+    for i in range (0, nCh2Show):
       q[i].put(None)
 
 
