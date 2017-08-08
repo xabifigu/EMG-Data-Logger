@@ -172,7 +172,7 @@ class SerialCom():
   MAX_CHANNELS = 8
   DATA_BUFFER_SIZE = 1
 
-  def __init__(self, name, q, comPort='COM8', bauds=9600):
+  def __init__(self, name, q, nChannels=1, comPort='COM8', bauds=9600):
       
     print (time.time())
 
@@ -290,20 +290,30 @@ class SerialCom():
           # else:
           #   pass   
 
-          if chNum == 0:
-            if q[0].empty():
-              # q.put(adcValue)
-              q[0].put(dataToSend)
-            cntCh0 += 1
-          else:
-            pass  
+          # if chNum == 0:
+          #   if q[0].empty():
+          #     # q.put(adcValue)
+          #     q[0].put(dataToSend)
+          #   cntCh0 += 1
+          # else:
+          #   pass  
 
-          if chNum == 1:
-            if q[1].empty():
+          # if chNum == 1:
+          #   if q[1].empty():
+          #     # q.put(adcValue)
+          #     q[1].put(dataToSend)
+          # else:
+          #   pass   
+
+          if chNum < nChannels:
+            if q[chNum].empty():
               # q.put(adcValue)
-              q[1].put(dataToSend)
+              q[chNum].put(dataToSend)
+            # cntCh0 += 1
+            else:
+              pass  
           else:
-            pass   
+            pass
 
           cnt += 1 
           print("Serial: " + str(cnt) + " Ch0: " + str(cntCh0))
@@ -313,8 +323,11 @@ class SerialCom():
       pass
 
     # q.put(None)
-    q[0].put(None)
-    q[1].put(None)
+    # q[0].put(None)
+    # q[1].put(None)
+
+    for i in range (0, nChannels):
+      q[i].put(None)
 
 
 
@@ -418,7 +431,7 @@ class SerialCom():
     # print(process_time())
 
 def main():
-    serialCom = SerialCom('Serial-1', None, comPort='COM8', bauds=9600)
+    serialCom = SerialCom('Serial-1', None, 2, comPort='COM8', bauds=9600)
     return 0
 
 if __name__ == '__main__':

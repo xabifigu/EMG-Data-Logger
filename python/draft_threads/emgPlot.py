@@ -138,7 +138,7 @@ import matplotlib.animation as animation
 from threading import Thread
 from multiprocessing import Queue
 
-class setPlot():
+class SetPlot():
 
   # chToShow = 0
 
@@ -267,9 +267,10 @@ class setPlot():
 
 def main():
   name = "Plot-1"
-  queue = Queue()
-  queue.put(None)
-  plot = setPlot(name, queue, 2)
+  q = []
+  q.append(Queue())
+  q[0].put(None)
+  plot = SetPlot(name, q, 1)
   return 0
 
 if __name__ == '__main__':
