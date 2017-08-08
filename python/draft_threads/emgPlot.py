@@ -12,7 +12,7 @@ class SetPlot():
     self.nCh2Show = nCh2Show
     self.startAnimation()
 
-  def data_gen(self, t=0):
+  def data_gen(self):
     cnt = 0
     x = []
 

@@ -2,6 +2,8 @@ import serial
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cbook as cbook
+
 from multiprocessing import Queue
 
 # constantes globales
@@ -96,73 +98,22 @@ def getNextExpectedCh (nextCh):
     nextCh += 1
   return nextCh
 
-#
-# def searchHeader (arData):
-#   """ 
-#   @def 
-#   @arg 
-#   @return 
-#   """
-#   # Formato de datos lo componen dos bytes XY0 Y1Y2
-#   # X = número de canal (4 bits)
-#   # Y0Y1Y2 = dato del canal (12 bits)
-#   # Primero hay que determinar qué bytes contienen la 
-#   # cabecera de cada canal: pares o impares 
 
-#   global MAX_CHANNELS
+def csv2Plot(path='.\\'):
+  print("mostrar diagramas")
+  # @todo: buscar ficheros válidos (crear carpetar para guardar datos nuevos)
 
-#   NM_CH_TO_BE_READ = MAX_CHANNELS*2
-#   startByte = -1
-#   headersFound = False
-#   index = 0
-#   expectedCh = 0
-#   chCounter = 0
-#   startSearch = False
+  # fname = cbook.get_sample_data('c:\\workspace\\temp\\python\\20170808200135_emg_ch0.csv', asfileobj=False)
+  # for i in range (0, MAX_CHANNELS):
+  #     figu = plt.figure(i)
+  #     plt.plotfile(fname, cols=(0,1), delimiter=',', names=['t(ms)', 'value'])
+  #     title = 'Channel ' + str(i) 
+  #     figu.suptitle(title, fontsize=18)
+  #     # plt.xlabel('t(ms)')
+  #     # plt.ylabel('value')
+  # plt.show()
 
-#   # Bucle para encontrar el patrón correcto
-#   # Se ejecutará hasta leer en el orden correcto todos los canales dos veces,
-#   # o hasta que se hayan leído 50 bytes sin encontrar la cabecera 
-#   while ((chCounter < NM_CH_TO_BE_READ) and (index <= 50)):
-#     while (startSearch != True):
-#       expectedCh = getHighNibbleFromByte(arData[index])
-#       if (expectedCh < MAX_CHANNELS):
-#         # posible canal encontrado
-#         startSearch = True
-#         startByte = index   # se guarda el primer dato del cual hay que empezar a leer
-#         # se almacena el siguiente canal que se espera encontrar
-#         expectedCh = getNextExpectedCh (expectedCh)
-
-#         index += 2      # se incrementa el índice en dos (se busca cabecera/num canal)
-#         chCounter += 1  # se incrementa el contados de cabeceras encontradas
-#       else:
-#         # posible canal no encontrado, comprobar siguiente byte
-#         index += 1
-    
-#     # Bucle hasta encontrar todas las cabeceras esperadas o encontrar un error
-#     while ((chCounter < (NM_CH_TO_BE_READ)) and (chCounter != 0)):
-#       if (expectedCh == getHighNibbleFromByte(arData[index])):
-#         # el canal encontrado es el esperado
-#         index += 2      # se incrementa el índice en dos (se busca cabecera/num canal)
-#         chCounter += 1  # se incrementa el contados de cabeceras encontradas 
-#         # se almacena el siguinte canal que se espera encontrar
-#         expectedCh = getNextExpectedCh (expectedCh)
-#       else:
-#         # se ha detectado un error en la trama
-#         # se resetean el contador y se decrementa el índice, ya que el
-#         # byte correcto puede haberse saltado
-#         expectedCh = 0
-#         chCounter = 0
-#         index -= 1
-#         startSearch = False
-
-#   if (chCounter >= NM_CH_TO_BE_READ):
-#     print ('Patron correcto!')
-#   else:
-#     print ('Patron no encontrado')
-#     startByte = -1
-  
-#   return startByte
-
+  pass
 
 ##################
 # MAIN
@@ -177,12 +128,20 @@ class SerialCom():
               comPort='COM8', bauds=9600,
               outFolder='.\\'):
 
-    MAX_CHANNELS = nChannels
-      
+    self.q = q
+    self.nChannels = nChannels
+    self.nCh2Show = nCh2Show
+    self.comPort = comPort
+    self.bauds = bauds
+    self.outFolder = outFolder
+
+    # MAX_CHANNELS = nChannels
+
+  # def start(self):    
     print (time.time())
 
     # inicializar y abrir puerto serie
-    ser = serialConfig(comPort, bauds)
+    ser = serialConfig(self.comPort, self.bauds)
 
     # tiempo entre cada dato: 
     # tiempo entre cada bit = 1/baudrate
@@ -310,10 +269,10 @@ class SerialCom():
           # else:
           #   pass   
 
-          if chNum < nCh2Show:
-            if q[chNum].empty():
+          if chNum < self.nCh2Show:
+            if self.q[chNum].empty():
               # q.put(adcValue)
-              q[chNum].put(dataToSend)
+              self.q[chNum].put(dataToSend)
             # cntCh0 += 1
             else:
               pass  
@@ -331,67 +290,18 @@ class SerialCom():
     # q[0].put(None)
     # q[1].put(None)
 
-    for i in range (0, nCh2Show):
-      q[i].put(None)
+    for i in range (0, self.nCh2Show):
+      self.q[i].put(None)
 
 
-
-    # while True:
-    #   x = ser.read(DATA_BUFFER_SIZE)
-    #   if len(x) < DATA_BUFFER_SIZE:
-    #     if len(x) != 0:
-    #       arTime.append(newDataPeriod_ms*numReadData)
-    #       arSerialData.append(ord(x))
-    #       numReadData = numReadData + len(x)
-    #     else:
-    #       pass
-    #     print ("No more data")
-    #     break
-    #   else:
-    #     arTime.append(newDataPeriod_ms*numReadData)
-    #     arSerialData.append(ord(x))
-    #     numReadData += DATA_BUFFER_SIZE
-
-    # if not (ser.closed):
-    #   ser.close()
+    if not (ser.closed):
+      ser.close()
       
     print ("Data received")
     print ("Número de datos: " + str(numReadData/2))
 
     # PROCESAR DATOS
-    if (numReadData != 0):
-      # # eliminar el primer item del array, ya que no es válido
-      # del arSerialData[0]
-      # del arTime[0]
-      # # obtener el primer byte válido
-      # startByte = searchHeader(arSerialData)
-      # # separa los datos según el canal leído
-      # index = startByte
-      # # crear matrices para almacenar los datos
-      # matrixCh = [[0 for x in range(1)] for y in range(MAX_CHANNELS)]
-      # matrixTime = [[0 for x in range(1)] for y in range(MAX_CHANNELS)]
-      # while (index < (numReadData-1)):
-      #   # recoger datos
-      #   currentData = arSerialData[index:index+2]
-      #   chNum, adcValue = getProcessReadData(currentData)
-
-      #   # comprobar que se leído un canal correcto
-      #   # La matriz se creó antes de ser usada, por lo que las columnas ya
-      #   # tienen un elemento.
-      #   # Los siguientes datos se guardan usando 'append'
-      #   if chNum < MAX_CHANNELS:
-      #     matrixCh[chNum].append(adcValue)
-      #     matrixTime[chNum].append(arTime[index])
-      #     index += 2
-      #   else:
-      #     # el canal leído no es correcto.
-      #     # puede que la lectura se haya desincronizado, por lo que
-      #     # se vuelve a buscar dato correcto: se apunta directamente al
-      #     # siguiente elemento de la lista
-      #     index += 1
-      #     pass
-
-      
+    if (numReadData != 0):      
       # se elimina el primer dato de cada matriz 
       # (primer elemento usado para creación de matriz)
       for i in range (0, MAX_CHANNELS):
@@ -410,7 +320,8 @@ class SerialCom():
       for i in range (0, MAX_CHANNELS):
         M = np.asarray([ matrixTime[i], matrixCh[i] ])
         MT = np.transpose(M)
-        fileName = "data_channel_" + str(i) + ".csv"
+        fileName = self.outFolder + '\\' + time.strftime("%Y%m%d%H%M%S")  \
+                  + "_emg_ch" + str(i) + ".csv"
         np.savetxt(fileName, MT, delimiter=",")
     else:
       pass
@@ -439,7 +350,8 @@ def main():
     q = []
     q.append(Queue())
     q[0].put(None)
-    serialCom = SerialCom('Serial-1', q, 1, comPort='COM8', bauds=9600)
+    serialCom = SerialCom('Serial-1', q, outFolder='C:\\workspace\\temp\\python')
+    # serialCom.start()
     return 0
 
 if __name__ == '__main__':

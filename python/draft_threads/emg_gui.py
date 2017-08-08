@@ -74,6 +74,7 @@ class App():
         # definir separador
         self.separ1 = ttk.Separator(self.topFrame, orient=HORIZONTAL)
         self.separ2 = ttk.Separator(self.topFrame, orient=HORIZONTAL)
+        self.separ3 = ttk.Separator(self.topFrame, orient=HORIZONTAL)
         
         # definición de botones
         self.btStartText = StringVar()
@@ -87,7 +88,12 @@ class App():
 
         self.btOpenFolder = ttk.Button(self.topFrame, text="Select", 
                                     padding=(2,2), command=self.selectOutputFolder)
-                                 
+ 
+        self.btShowGraph = ttk.Button(self.topFrame, text="Show Graphs", 
+                            padding=(2,2), command=self.showGraphs)
+ 
+
+
         # Se definen las posiciones de los widgets dentro de
         # la ventana.
         self.topFrame.grid(column=0, row=0, padx=5, pady=5)
@@ -114,6 +120,10 @@ class App():
         self.labOutput.grid(column=0, row=6, padx=2, pady=0, columnspan=3, sticky=W)
         self.etFolder.grid(column=0, row=7, padx=2, pady=0, columnspan=4, sticky=W+E)
         self.btOpenFolder.grid(column=4, row=7, padx=2, pady=0)
+
+        self.btShowGraph.grid(column=0, row=8, columnspan=5, padx=5, pady=5, sticky=W+E)
+
+        self.separ3.grid(column=0, row=9, columnspan=5, padx=5, pady=5, sticky=W+E)
 
         self.btStart.grid(column=1, row=0, padx=5, pady=5)
         self.btExit.grid(column=2, row=0, padx=5, pady=5)
@@ -143,7 +153,7 @@ class App():
                     # SerialCom(comPort=self.cbPort.get(), bauds=iBauds)
                     runPlot = ThreadsApp(nChannels=iMaxCh, nCh2Show=iCh2Show,
                                         comPort=self.cbPort.get(), bauds=iBauds,
-                                        outFolder=self.etFolder.get())
+                                        outFolder=self.etFolder.get().replace('/','\\'))
                 except:
                     self.setErrorMsg("ERROR: Bauds not valid!")
         elif self.btStartText.get() == "Stop":
@@ -181,6 +191,22 @@ class App():
         del listPorts[0]
         self.cbPort['values'] = listPorts
         self.cbPort.set(listPorts[0])
+
+    def showGraphs(self):
+        print("mostrar diagramas")
+        # fname = cbook.get_sample_data('c:\\workspace\\temp\\python\\20170808200135_emg_ch0.csv', asfileobj=False)
+        # if (numReadData != 0):
+        #     for i in range (0, MAX_CHANNELS):
+        #         fig = plt.figure(i)
+        #         plt.plotfile(fname, cols=(0,1), delimiter=',', names=['t(ms)', 'value'])
+        #         title = 'Channel ' + str(i) 
+        #         fig.suptitle(title, fontsize=18)
+        #         plt.xlabel('time (ms)')
+        #         plt.ylabel('value')
+        #     plt.show()
+        # else:
+        #     pass
+
 
     # selección de carpeta de salida de ficheros
     def selectOutputFolder(self):
