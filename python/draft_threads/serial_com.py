@@ -1,8 +1,8 @@
 import serial
-# import binascii
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+from multiprocessing import Queue
 
 # constantes globales
 MAX_CHANNELS = 8
@@ -97,71 +97,71 @@ def getNextExpectedCh (nextCh):
   return nextCh
 
 #
-def searchHeader (arData):
-  """ 
-  @def 
-  @arg 
-  @return 
-  """
-  # Formato de datos lo componen dos bytes XY0 Y1Y2
-  # X = número de canal (4 bits)
-  # Y0Y1Y2 = dato del canal (12 bits)
-  # Primero hay que determinar qué bytes contienen la 
-  # cabecera de cada canal: pares o impares 
+# def searchHeader (arData):
+#   """ 
+#   @def 
+#   @arg 
+#   @return 
+#   """
+#   # Formato de datos lo componen dos bytes XY0 Y1Y2
+#   # X = número de canal (4 bits)
+#   # Y0Y1Y2 = dato del canal (12 bits)
+#   # Primero hay que determinar qué bytes contienen la 
+#   # cabecera de cada canal: pares o impares 
 
-  global MAX_CHANNELS
+#   global MAX_CHANNELS
 
-  NM_CH_TO_BE_READ = MAX_CHANNELS*2
-  startByte = -1
-  headersFound = False
-  index = 0
-  expectedCh = 0
-  chCounter = 0
-  startSearch = False
+#   NM_CH_TO_BE_READ = MAX_CHANNELS*2
+#   startByte = -1
+#   headersFound = False
+#   index = 0
+#   expectedCh = 0
+#   chCounter = 0
+#   startSearch = False
 
-  # Bucle para encontrar el patrón correcto
-  # Se ejecutará hasta leer en el orden correcto todos los canales dos veces,
-  # o hasta que se hayan leído 50 bytes sin encontrar la cabecera 
-  while ((chCounter < NM_CH_TO_BE_READ) and (index <= 50)):
-    while (startSearch != True):
-      expectedCh = getHighNibbleFromByte(arData[index])
-      if (expectedCh < MAX_CHANNELS):
-        # posible canal encontrado
-        startSearch = True
-        startByte = index   # se guarda el primer dato del cual hay que empezar a leer
-        # se almacena el siguiente canal que se espera encontrar
-        expectedCh = getNextExpectedCh (expectedCh)
+#   # Bucle para encontrar el patrón correcto
+#   # Se ejecutará hasta leer en el orden correcto todos los canales dos veces,
+#   # o hasta que se hayan leído 50 bytes sin encontrar la cabecera 
+#   while ((chCounter < NM_CH_TO_BE_READ) and (index <= 50)):
+#     while (startSearch != True):
+#       expectedCh = getHighNibbleFromByte(arData[index])
+#       if (expectedCh < MAX_CHANNELS):
+#         # posible canal encontrado
+#         startSearch = True
+#         startByte = index   # se guarda el primer dato del cual hay que empezar a leer
+#         # se almacena el siguiente canal que se espera encontrar
+#         expectedCh = getNextExpectedCh (expectedCh)
 
-        index += 2      # se incrementa el índice en dos (se busca cabecera/num canal)
-        chCounter += 1  # se incrementa el contados de cabeceras encontradas
-      else:
-        # posible canal no encontrado, comprobar siguiente byte
-        index += 1
+#         index += 2      # se incrementa el índice en dos (se busca cabecera/num canal)
+#         chCounter += 1  # se incrementa el contados de cabeceras encontradas
+#       else:
+#         # posible canal no encontrado, comprobar siguiente byte
+#         index += 1
     
-    # Bucle hasta encontrar todas las cabeceras esperadas o encontrar un error
-    while ((chCounter < (NM_CH_TO_BE_READ)) and (chCounter != 0)):
-      if (expectedCh == getHighNibbleFromByte(arData[index])):
-        # el canal encontrado es el esperado
-        index += 2      # se incrementa el índice en dos (se busca cabecera/num canal)
-        chCounter += 1  # se incrementa el contados de cabeceras encontradas 
-        # se almacena el siguinte canal que se espera encontrar
-        expectedCh = getNextExpectedCh (expectedCh)
-      else:
-        # se ha detectado un error en la trama
-        # se resetean el contador y se decrementa el índice, ya que el
-        # byte correcto puede haberse saltado
-        expectedCh = 0
-        chCounter = 0
-        index -= 1
-        startSearch = False
+#     # Bucle hasta encontrar todas las cabeceras esperadas o encontrar un error
+#     while ((chCounter < (NM_CH_TO_BE_READ)) and (chCounter != 0)):
+#       if (expectedCh == getHighNibbleFromByte(arData[index])):
+#         # el canal encontrado es el esperado
+#         index += 2      # se incrementa el índice en dos (se busca cabecera/num canal)
+#         chCounter += 1  # se incrementa el contados de cabeceras encontradas 
+#         # se almacena el siguinte canal que se espera encontrar
+#         expectedCh = getNextExpectedCh (expectedCh)
+#       else:
+#         # se ha detectado un error en la trama
+#         # se resetean el contador y se decrementa el índice, ya que el
+#         # byte correcto puede haberse saltado
+#         expectedCh = 0
+#         chCounter = 0
+#         index -= 1
+#         startSearch = False
 
-  if (chCounter >= NM_CH_TO_BE_READ):
-    print ('Patron correcto!')
-  else:
-    print ('Patron no encontrado')
-    startByte = -1
+#   if (chCounter >= NM_CH_TO_BE_READ):
+#     print ('Patron correcto!')
+#   else:
+#     print ('Patron no encontrado')
+#     startByte = -1
   
-  return startByte
+#   return startByte
 
 
 ##################
@@ -431,7 +431,10 @@ class SerialCom():
     # print(process_time())
 
 def main():
-    serialCom = SerialCom('Serial-1', None, 2, comPort='COM8', bauds=9600)
+    q = []
+    q.append(Queue())
+    q[0].put(None)
+    serialCom = SerialCom('Serial-1', q, 1, comPort='COM8', bauds=9600)
     return 0
 
 if __name__ == '__main__':
