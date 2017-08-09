@@ -12,7 +12,7 @@ from threading import Thread
 from multiprocessing import Queue
 
 # from serial_com import SerialCom
-# from emgPlot import SetPlot
+from emgPlot import csv2Plot
 from emgThreads import ThreadsApp
 
 # Gestor de geometría (grid)
@@ -194,19 +194,10 @@ class App():
 
     def showGraphs(self):
         print("mostrar diagramas")
-        # fname = cbook.get_sample_data('c:\\workspace\\temp\\python\\20170808200135_emg_ch0.csv', asfileobj=False)
-        # if (numReadData != 0):
-        #     for i in range (0, MAX_CHANNELS):
-        #         fig = plt.figure(i)
-        #         plt.plotfile(fname, cols=(0,1), delimiter=',', names=['t(ms)', 'value'])
-        #         title = 'Channel ' + str(i) 
-        #         fig.suptitle(title, fontsize=18)
-        #         plt.xlabel('time (ms)')
-        #         plt.ylabel('value')
-        #     plt.show()
-        # else:
-        #     pass
-
+        if csv2Plot(path=self.etFolder.get().replace('/','\\'), extension='emgdat') is False:
+            self.setErrorMsg("ERROR: Files could not be open")
+        else:
+            self.setInfoMsg("Graphs shown")
 
     # selección de carpeta de salida de ficheros
     def selectOutputFolder(self):

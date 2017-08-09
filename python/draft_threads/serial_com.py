@@ -1,10 +1,12 @@
 import serial
 import time
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.cbook as cbook
+# import matplotlib.pyplot as plt
+# import matplotlib.cbook as cbook
 
 from multiprocessing import Queue
+
+import os
 
 # constantes globales
 MAX_CHANNELS = 8
@@ -317,11 +319,15 @@ class SerialCom():
     # Columna 0: tiempo
     # Columna 1: valores ADC
     if (numReadData != 0):
+      timeString = time.strftime("%Y%m%d%H%M%S")
+      pathName = self.outFolder + '\\' + timeString
+      if not os.path.exists(pathName): 
+        os.makedirs(pathName)
       for i in range (0, MAX_CHANNELS):
         M = np.asarray([ matrixTime[i], matrixCh[i] ])
         MT = np.transpose(M)
-        fileName = self.outFolder + '\\' + time.strftime("%Y%m%d%H%M%S")  \
-                  + "_emg_ch" + str(i) + ".csv"
+        fileName = pathName + '\\' + timeString  \
+                  + "_emg_ch" + str(i) + ".emgdat"
         np.savetxt(fileName, MT, delimiter=",")
     else:
       pass
