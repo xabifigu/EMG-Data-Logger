@@ -26,7 +26,7 @@ class MainWindow(tk.Frame):
         self.labBauds = ttk.Label(self.topFrame, text='Bauds:', padding=(5,5))
         self.labComConfig = ttk.Label(self.topFrame, text='Stopbit:1 / Parity:0', padding=(5,5))
         self.labOutput = ttk.Label(self.topFrame, text='Output Folder', padding=(2,0))
-        self.labMaxChls = ttk.Label(self.topFrame, text='ADC channels: ')
+        self.labMaxChls = ttk.Label(self.topFrame, text='Active ADC channels: ')
         self.labNmChToShow = ttk.Label(self.topFrame, text='Channels to show')
         self.labMsg = ttk.Label(self.msgFrame, text='Active')
 
@@ -146,9 +146,15 @@ class MainWindow(tk.Frame):
            self.etNmChl.get() == "":
             print("Some settings are empty!")   # @note traza
             self.setErrorMsg("ERROR: Some settings are empty!")
-        elif self.etNmMaxCh.get() < self.etNmChl.get():
-            print("Number of channles to show bigger than number of channels")  # @note traza
-            self.setErrorMsg("ERROR: Number of channels are not correct")
+        elif int(self.etNmMaxCh.get()) > 8 or int(self.etNmChl.get()) > 8:
+            print("Number of channles bigger than 8")  # @note traza
+            self.setErrorMsg("ERROR: Number of channels cannot be bigger than 8")    
+        elif int(self.etNmMaxCh.get()) < 1 or int(self.etNmChl.get()) < 1:
+            print("Number of channles lower than 1")  # @note traza
+            self.setErrorMsg("ERROR: Number of channels cannot be less than 1")      
+        elif int(self.etNmMaxCh.get()) < int(self.etNmChl.get()):
+            print("Number of channles to show bigger than number of channels to save")  # @note traza
+            self.setWarningMsg("WARNING: Number of channels are not correct")     
         else:
             ret = True
         return ret

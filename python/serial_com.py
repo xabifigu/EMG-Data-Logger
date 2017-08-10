@@ -210,7 +210,7 @@ class SerialCom():
       pathName = self.outFolder + '\\' + timeString
       if not os.path.exists(pathName): 
         os.makedirs(pathName)
-      for i in range (0, self.MAX_CHANNELS):
+      for i in range (0, self.nChannels):
         M = np.asarray([ matrixTime[i], matrixCh[i] ])
         MT = np.transpose(M)
         fileName = pathName + '\\' + timeString  \
