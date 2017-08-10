@@ -5,29 +5,31 @@ from tkinter import *
 from tkinter import ttk, font
 from serial.tools import list_ports
 from tkinter import filedialog
-from serial_com import SerialCom
+import tkinter as tk
+
+# import time
+
+# from threading import Thread
+# from multiprocessing import Queue
+
+# from serial_com import SerialCom
+# from emgPlot import csv2Plot
+# from emgThreads import ThreadsApp
+
+from runemg import csv2Plot
+from runemg import ThreadsApp
 
 # Gestor de geometría (grid)
 
-class App():
-    def __init__(self):
-        self.root = Tk()
-        self.root.title("EMG Data Logger")
-        # self.root.wm_iconbitmap(r'Upv-ehu.ico')
-        self.root.minsize(175,75)
-        self.root.resizable(width=False,height=False)
-        
-        # Cambia el formato de la fuente actual a negrita para
-        # resaltar las dos etiquetas que acompañan a las cajas
-        # de entrada. (Para este cambio se ha importado el  
-        # módulo 'font' al comienzo del programa):
-        fuente = font.Font(weight='bold')
-        
+class MainWindow(tk.Frame):
+# class MainWindow():
+    def __init__(self, *args, **kwargs):
+        tk.Frame.__init__(self, *args, **kwargs)        
         # Define los difrentes frames
-        self.topFrame = ttk.Frame(self.root, borderwidth=2,
+        self.topFrame = ttk.Frame(self, borderwidth=2,
                                relief="raised", padding=(10,10))
-        self.bottomFrame = ttk.Frame(self.root)
-        self.msgFrame = ttk.Frame (self.root,borderwidth=1,
+        self.bottomFrame = ttk.Frame(self)
+        self.msgFrame = ttk.Frame (self,borderwidth=1,
                                relief="sunken")
 
         # define las etiquetas
@@ -35,7 +37,9 @@ class App():
         self.labBauds = ttk.Label(self.topFrame, text='Bauds:', padding=(5,5))
         self.labComConfig = ttk.Label(self.topFrame, text='Stopbit:1 / Parity:0', padding=(5,5))
         self.labOutput = ttk.Label(self.topFrame, text='Output Folder', padding=(2,0))
-        self.labMsg = ttk.Label(self.msgFrame, text='Stopped')
+        self.labMaxChls = ttk.Label(self.topFrame, text='ADC channels: ')
+        self.labNmChToShow = ttk.Label(self.topFrame, text='Channels to show')
+        self.labMsg = ttk.Label(self.msgFrame, text='Active')
 
         # definición de Combobox
         self.portsList = StringVar()
@@ -51,10 +55,20 @@ class App():
         self.Folder = StringVar()
         self.etFolder = ttk.Entry(self.topFrame, textvariable=self.Folder)
 
-    
+        self.NmMaxCh = StringVar()
+        self.etNmMaxCh = ttk.Entry(self.topFrame, textvariable=self.NmMaxCh,
+                                width=2)
+        self.NmMaxCh.set("8")
+
+        self.NmChlShow = StringVar()
+        self.etNmChl = ttk.Entry(self.topFrame, textvariable=self.NmChlShow,
+                                width=2)
+        self.NmChlShow.set("1")
+
         # definir separador
         self.separ1 = ttk.Separator(self.topFrame, orient=HORIZONTAL)
         self.separ2 = ttk.Separator(self.topFrame, orient=HORIZONTAL)
+        self.separ3 = ttk.Separator(self.topFrame, orient=HORIZONTAL)
         
         # definición de botones
         self.btStartText = StringVar()
@@ -68,7 +82,12 @@ class App():
 
         self.btOpenFolder = ttk.Button(self.topFrame, text="Select", 
                                     padding=(2,2), command=self.selectOutputFolder)
-                                 
+ 
+        self.btShowGraph = ttk.Button(self.topFrame, text="Show Graphs From Directory", 
+                            padding=(2,2), command=self.showGraphs)
+ 
+
+
         # Se definen las posiciones de los widgets dentro de
         # la ventana.
         self.topFrame.grid(column=0, row=0, padx=5, pady=5)
@@ -85,11 +104,20 @@ class App():
 
         self.separ1.grid(column=0, row=2, columnspan=5, padx=5, pady=5, sticky=W+E)
 
-        self.separ2.grid(column=0, row=4, columnspan=5, padx=5, pady=5, sticky=W+E)
+        self.labMaxChls.grid(column=0, row=3, padx=5, pady=5, columnspan=2)
+        self.etNmMaxCh.grid(column=2, row=3, padx=5, pady=5, sticky=W)
+        self.labNmChToShow.grid(column=0, row=4, padx=5, pady=5, columnspan=2)
+        self.etNmChl.grid(column=2, row=4, padx=5, pady=5, sticky=W)
 
-        self.labOutput.grid(column=0, row=5, padx=2, pady=0, columnspan=3, sticky=W)
-        self.etFolder.grid(column=0, row=6, padx=2, pady=0, columnspan=4, sticky=W+E)
-        self.btOpenFolder.grid(column=4, row=6, padx=2, pady=0)
+        self.separ2.grid(column=0, row=5, columnspan=5, padx=5, pady=5, sticky=W+E)
+
+        self.labOutput.grid(column=0, row=6, padx=2, pady=0, columnspan=3, sticky=W)
+        self.etFolder.grid(column=0, row=7, padx=2, pady=0, columnspan=4, sticky=W+E)
+        self.btOpenFolder.grid(column=4, row=7, padx=2, pady=0)
+
+        self.btShowGraph.grid(column=0, row=8, columnspan=5, padx=5, pady=5, sticky=W+E)
+
+        self.separ3.grid(column=0, row=9, columnspan=5, padx=5, pady=5, sticky=W+E)
 
         self.btStart.grid(column=1, row=0, padx=5, pady=5)
         self.btExit.grid(column=2, row=0, padx=5, pady=5)
@@ -99,34 +127,34 @@ class App():
 
         # actualizar puertos (combobox)
         self.actualizarPuertos()
-
-        
-        # Se inicia el gui
-        
-        self.root.mainloop()
     
     # El método start es quien lanza el script de captura de datos  
     def start(self):
-        if self.btStartText.get() == "Start":
-            if self.cbPort.get() == "" or \
-               self.etBauds.get() == "" or \
-               self.etFolder.get() == "":
-                print("Some settings are empty!")
-                self.setErrorMsg("ERROR: Some settings are empty!")
-            else:
-                print(self.cbPort.get())
-                self.btStartText.set("Stop")
-                self.setInfoMsg("Running")
-                try:
-                    x = int(self.Bauds.get())
-                    SerialCom(comPort=self.cbPort.get(), bauds=x)
-                except:
-                    self.setErrorMsg("ERROR: Bauds not valid!")
-        elif self.btStartText.get() == "Stop":
-            self.btStartText.set("Start")
-            self.setInfoMsg("Stopped")
+        if self.checkConsistency() == True:
+            print(self.cbPort.get())
+            self.setInfoMsg("Active")
+            try:
+                cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
+                            " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\')
+                os.system("emgThreads.py " + cmdArgs)
+            except:
+                self.setErrorMsg("ERROR: Bauds not valid!")
+
+    def checkConsistency(self):
+        ret = False
+        if self.cbPort.get() == "" or \
+           self.etBauds.get() == "" or \
+           self.etFolder.get() == "" or \
+           self.etNmMaxCh.get() == "" or \
+           self.etNmChl.get() == "":
+            print("Some settings are empty!")   # @note traza
+            self.setErrorMsg("ERROR: Some settings are empty!")
+        elif self.etNmMaxCh.get() < self.etNmChl.get():
+            print("Number of channles to show bigger than number of channels")  # @note traza
+            self.setErrorMsg("ERROR: Number of channels are not correct")
         else:
-            pass
+            ret = True
+        return ret
 
     # actualiza la lista de puertos COM
     def actualizarPuertos(self):
@@ -142,9 +170,17 @@ class App():
         self.cbPort['values'] = listPorts
         self.cbPort.set(listPorts[0])
 
+    def showGraphs(self):
+        print("mostrar diagramas")  # @note traza
+        direct = filedialog.askdirectory(initialdir=os.getcwd(), title="Select graphs' directory")
+        if csv2Plot(path=direct.replace('/','\\'), extension='emgdat') is False:
+            self.setErrorMsg("ERROR: Files could not be open")
+        else:
+            self.setInfoMsg("Graphs shown")
+
     # selección de carpeta de salida de ficheros
     def selectOutputFolder(self):
-        print("Output Folder")
+        print("Output Folder")  # @note traza
         # self.root.filename = filedialog.askopenfilename(initialdir=os.getcwd(), title="Select file",
         #                                    filetypes=[("Text Files", "*.txt")])
         self.Folder.set(filedialog.askdirectory(initialdir=os.getcwd(), title="Select directory"))
@@ -166,8 +202,18 @@ class App():
 
 # main
 def main():
-    mi_app = App()
+    root = tk.Tk()
+    root.title("EMG Data Logger")
+    root.minsize(175,75)
+    root.resizable(width=False,height=False)
+    main = MainWindow(root) 
+    main.pack(side="top", fill="both", expand=True)
+    # # self.root.wm_iconbitmap(r'Upv-ehu.ico')
+    root.mainloop()
+
+    # mi_app = MainWindow()
     return 0
 
 if __name__ == '__main__':
     main()
+    
