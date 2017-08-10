@@ -13,6 +13,7 @@ output_files/
 drafts/
 testGraph/
 */__pycache__/
+draftThreads/
 
 *.csv
 

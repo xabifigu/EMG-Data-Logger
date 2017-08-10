@@ -6,23 +6,12 @@ from tkinter import ttk, font
 from serial.tools import list_ports
 from tkinter import filedialog
 import tkinter as tk
-
-# import time
-
-# from threading import Thread
-# from multiprocessing import Queue
-
-# from serial_com import SerialCom
-# from emgPlot import csv2Plot
-# from emgThreads import ThreadsApp
+from PIL import Image, ImageTk
 
 from runemg import csv2Plot
-from runemg import ThreadsApp
 
-# Gestor de geometría (grid)
-
+# Gestor de geometría
 class MainWindow(tk.Frame):
-# class MainWindow():
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)        
         # Define los difrentes frames
@@ -46,7 +35,7 @@ class MainWindow(tk.Frame):
         self.cbPort = ttk.Combobox(self.topFrame, textvariable=self.portsList,
                                     width=10)
         
-        # definici󮠤e entrada de texto
+        # definiciones entrada de texto
         self.Bauds = StringVar()
         self.etBauds = ttk.Entry(self.topFrame, textvariable=self.Bauds,
                                 width=10)
@@ -86,7 +75,12 @@ class MainWindow(tk.Frame):
         self.btShowGraph = ttk.Button(self.topFrame, text="Show Graphs From Directory", 
                             padding=(2,2), command=self.showGraphs)
  
-
+        # definición de imágenes
+        pic = Image.open(".\\icons\\Upv.ico")
+        pic = pic.resize((50,50), Image.ANTIALIAS)
+        render = ImageTk.PhotoImage(pic)
+        self.imUpv = ttk.Label(self.topFrame, image=render)
+        self.imUpv.image = render
 
         # Se definen las posiciones de los widgets dentro de
         # la ventana.
@@ -94,20 +88,22 @@ class MainWindow(tk.Frame):
         self.bottomFrame.grid(column=0, row=1, padx=5, pady=5)
         self.msgFrame.grid(column=0, row=3, columnspan=4, sticky=W+E)
 
-        self.labPorts.grid(column=0, row=0, padx=5, pady=5)
-        self.cbPort.grid(column=1, row=0, columnspan=2, padx=5, pady=5)
-        self.btRefresh.grid(column=3, row=0, columnspan=2, padx=5, pady=5)
+        self.labMaxChls.grid(column=0, row=0, padx=5, pady=5, columnspan=2)
+        self.etNmMaxCh.grid(column=2, row=0, padx=5, pady=5, sticky=W)
+        self.labNmChToShow.grid(column=0, row=1, padx=5, pady=5, columnspan=2)
+        self.etNmChl.grid(column=2, row=1, padx=5, pady=5, sticky=W)
 
-        self.labBauds.grid(column=0, row=1, padx=5, pady=5)
-        self.etBauds.grid(column=1, row=1, padx=5, columnspan=2, pady=5, sticky=W)
-        self.labComConfig.grid(column=3, row=1, padx=5, columnspan=2, pady=5, sticky=W)
+        self.imUpv.grid(column=4, row=0, padx=5, pady=5, columnspan=2, rowspan=2, sticky=W+E)
 
         self.separ1.grid(column=0, row=2, columnspan=5, padx=5, pady=5, sticky=W+E)
 
-        self.labMaxChls.grid(column=0, row=3, padx=5, pady=5, columnspan=2)
-        self.etNmMaxCh.grid(column=2, row=3, padx=5, pady=5, sticky=W)
-        self.labNmChToShow.grid(column=0, row=4, padx=5, pady=5, columnspan=2)
-        self.etNmChl.grid(column=2, row=4, padx=5, pady=5, sticky=W)
+        self.labPorts.grid(column=0, row=3, padx=5, pady=5)
+        self.cbPort.grid(column=1, row=3, columnspan=2, padx=5, pady=5)
+        self.btRefresh.grid(column=3, row=3, columnspan=2, padx=5, pady=5)
+
+        self.labBauds.grid(column=0, row=4, padx=5, pady=5)
+        self.etBauds.grid(column=1, row=4, padx=5, columnspan=2, pady=5, sticky=W)
+        self.labComConfig.grid(column=3, row=4, padx=5, columnspan=2, pady=5, sticky=W)
 
         self.separ2.grid(column=0, row=5, columnspan=5, padx=5, pady=5, sticky=W+E)
 
@@ -136,11 +132,12 @@ class MainWindow(tk.Frame):
             try:
                 cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
                             " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\')
-                os.system("emgThreads.py " + cmdArgs)
+                os.system("runemg.py " + cmdArgs)
             except:
                 self.setErrorMsg("ERROR: Bauds not valid!")
 
     def checkConsistency(self):
+        # se comprueba la consistencia de los datos
         ret = False
         if self.cbPort.get() == "" or \
            self.etBauds.get() == "" or \
@@ -181,8 +178,6 @@ class MainWindow(tk.Frame):
     # selección de carpeta de salida de ficheros
     def selectOutputFolder(self):
         print("Output Folder")  # @note traza
-        # self.root.filename = filedialog.askopenfilename(initialdir=os.getcwd(), title="Select file",
-        #                                    filetypes=[("Text Files", "*.txt")])
         self.Folder.set(filedialog.askdirectory(initialdir=os.getcwd(), title="Select directory"))
 
     # inserta un mensaje de error
