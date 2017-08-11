@@ -9,11 +9,10 @@
 # !.vscode/extensions.json
 
 __pycache__/
-output_files/
 drafts/
-testGraph/
 */__pycache__/
 draftThreads/
+exec/
 
 *.csv
 
