@@ -24,10 +24,12 @@ class MainWindow(tk.Frame):
         # define las etiquetas
         self.labPorts = ttk.Label(self.topFrame, text="COM:", padding=(5,5))
         self.labBauds = ttk.Label(self.topFrame, text='Bauds:', padding=(5,5))
-        self.labComConfig = ttk.Label(self.topFrame, text='Stopbit:1 / Parity:0', padding=(5,5))
+        self.labComConfig = ttk.Label(self.topFrame, text='Stopbit: 1 / Parity: 0', padding=(5,5))
         self.labOutput = ttk.Label(self.topFrame, text='Output Folder', padding=(2,0))
-        self.labMaxChls = ttk.Label(self.topFrame, text='Active ADC channels: ')
-        self.labNmChToShow = ttk.Label(self.topFrame, text='Channels to show')
+        self.labMaxChls = ttk.Label(self.topFrame, text='Active channels')
+        self.labNmChToShow = ttk.Label(self.topFrame, text='RT channels')
+        self.labVmax= ttk.Label(self.topFrame, text='V max')
+        self.labVmin= ttk.Label(self.topFrame, text='V min')
         self.labMsg = ttk.Label(self.msgFrame, text='Active')
 
         # definición de Combobox
@@ -54,6 +56,14 @@ class MainWindow(tk.Frame):
                                 width=2)
         self.NmChlShow.set("1")
 
+        self.vMax = StringVar()
+        self.etVmax = ttk.Entry(self.topFrame, textvariable=self.vMax,
+                                width=5)
+        
+        self.vMin = StringVar()
+        self.etVmin = ttk.Entry(self.topFrame, textvariable=self.vMin,
+                                width=5)
+
         # definir separador
         self.separ1 = ttk.Separator(self.topFrame, orient=HORIZONTAL)
         self.separ2 = ttk.Separator(self.topFrame, orient=HORIZONTAL)
@@ -75,12 +85,12 @@ class MainWindow(tk.Frame):
         self.btShowGraph = ttk.Button(self.topFrame, text="Show Graphs From Directory", 
                             padding=(2,2), command=self.showGraphs)
  
-        # definición de imágenes
-        pic = Image.open(".\\icons\\Upv.ico")
-        pic = pic.resize((50,50), Image.ANTIALIAS)
-        render = ImageTk.PhotoImage(pic)
-        self.imUpv = ttk.Label(self.topFrame, image=render)
-        self.imUpv.image = render
+        # # definición de imágenes
+        # pic = Image.open(".\\icons\\Upv.ico")
+        # pic = pic.resize((50,50), Image.ANTIALIAS)
+        # render = ImageTk.PhotoImage(pic)
+        # self.imUpv = ttk.Label(self.topFrame, image=render)
+        # self.imUpv.image = render
 
         # Se definen las posiciones de los widgets dentro de
         # la ventana.
@@ -92,8 +102,13 @@ class MainWindow(tk.Frame):
         self.etNmMaxCh.grid(column=2, row=0, padx=5, pady=5, sticky=W)
         self.labNmChToShow.grid(column=0, row=1, padx=5, pady=5, columnspan=2)
         self.etNmChl.grid(column=2, row=1, padx=5, pady=5, sticky=W)
+        self.labVmax.grid(column=3, row=0, padx=5, pady=5, sticky=E)
+        self.etVmax.grid(column=4, row=0, padx=5, pady=5, sticky=W)
+        self.labVmin.grid(column=3, row=1, padx=5, pady=5, sticky=E)
+        self.etVmin.grid(column=4, row=1, padx=5, pady=5, sticky=W)
 
-        self.imUpv.grid(column=4, row=0, padx=5, pady=5, columnspan=2, rowspan=2, sticky=W+E)
+
+        # self.imUpv.grid(column=4, row=0, padx=5, pady=5, columnspan=2, rowspan=2, sticky=W+E)
 
         self.separ1.grid(column=0, row=2, columnspan=5, padx=5, pady=5, sticky=W+E)
 
@@ -130,8 +145,11 @@ class MainWindow(tk.Frame):
             print(self.cbPort.get())
             self.setInfoMsg("Active")
             try:
+                # cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
+                #             " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\')
                 cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
-                            " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\')
+                            " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\') + \
+                            " " + self.vMax.get() + " " + self.vMin.get()
                 os.system("runemg.py " + cmdArgs)
             except:
                 self.setErrorMsg("ERROR: Bauds not valid!")
@@ -155,6 +173,11 @@ class MainWindow(tk.Frame):
         elif int(self.etNmMaxCh.get()) < int(self.etNmChl.get()):
             print("Number of channles to show bigger than number of channels to save")  # @note traza
             self.setWarningMsg("WARNING: Number of channels are not correct")     
+        elif (self.vMin.get() is "" and self.vMax.get() is not "") or \
+             (self.vMin.get() is not "" and self.vMax.get() is ""):
+            self.setErrorMsg("ERROR: One voltage data is empty")  
+        elif float(self.vMax.get()) <= float(self.vMin.get()):
+            self.setErrorMsg("ERROR: Voltage values are not correct") 
         else:
             ret = True
         return ret

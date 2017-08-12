@@ -62,8 +62,8 @@ class SerialCom():
 
   def __init__(self, name, q, 
               nChannels=8, nCh2Show=1, 
-              comPort='COM8', bauds=9600,
-              outFolder='.\\'):
+              comPort='COM7', bauds=9600,
+              outFolder='.\\', vMax=4095, vMin=0):
 
     self.q = q
     self.nChannels = nChannels
@@ -71,6 +71,8 @@ class SerialCom():
     self.comPort = comPort
     self.bauds = bauds
     self.outFolder = outFolder
+    self.vMax = vMax
+    self.vMin = vMin
 
     print (time.time())
 
@@ -231,6 +233,7 @@ class SerialCom():
     ch = getHighNibbleFromByte(arData[0])
     aux = getLowNibbleFromByte(arData[0])
     value = bytes2Word(aux,arData[1])
+    value = value * self.vMax / 4095
     return ch, value
 
 

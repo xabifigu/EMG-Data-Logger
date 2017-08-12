@@ -33,9 +33,11 @@ def csv2Plot(path='.\\', extension='emgdat'):
 
 class SetPlot():
   # def __init__(self, name, q, nCh2Show=1):
-  def __init__(self, q, nCh2Show=1):
+  def __init__(self, q, nCh2Show=1, vMax=4095, vMin=0):
     self.q = q
     self.nCh2Show = nCh2Show
+    self.vMax = vMax
+    self.vMin = vMin
     self.startAnimation() # inicia la representación
 
   def data_gen(self):
@@ -66,8 +68,10 @@ class SetPlot():
 
   def init(self):
     # inicialización de datos para la gráfica
+    yMax = self.vMax + (self.vMax * 0.05)
     for i in range(0, self.nCh2Show):
-      self.arAx[i].set_ylim(0, 4250)
+      self.arAx[i].set_ylim(self.vMin, yMax)
+      # self.arAx[i].set_ylim(0, 4250)
       self.arAx[i].set_xlim(0, 5000)
 
       del self.arDataX[i][:]
@@ -132,9 +136,12 @@ class SetPlot():
 
 
 class ThreadsApp():
+  # def __init__(self, nChannels=8, nCh2Show=1,
+  #           comPort='COM8', bauds=9600,
+  #           outFolder='.\\'):
   def __init__(self, nChannels=8, nCh2Show=1,
-            comPort='COM8', bauds=9600,
-            outFolder='.\\'):
+            comPort='COM7', bauds=9600,
+            outFolder='.\\', vMax=4095, vMin=0):
 
     # Se crean las colas que enviarán los datos recogidos
     # por el módulo puerto serie a la gráfica en tiempo real.
@@ -148,11 +155,12 @@ class ThreadsApp():
     thread1 = Thread( target=SerialCom, args=("Serial Com", q, 
                                               nChannels, nCh2Show,
                                               comPort, bauds,
-                                              outFolder) )
+                                              outFolder,
+                                              vMax, vMin) )
     thread1.daemon = True
     thread1.start()
 
-    SetPlot(q, nCh2Show)  # iniciar mgráfica en tiempo real
+    SetPlot(q, nCh2Show, vMax, vMin)  # iniciar mgráfica en tiempo real
 
     thread1.join()  # esperar a que termine el hilo secundario
 
@@ -172,5 +180,11 @@ if __name__ == '__main__':
     elif len(sys.argv) == 6:
       ThreadsApp(int(sys.argv[1]), int(sys.argv[2]), sys.argv[3],
                 int(sys.argv[4]), sys.argv[5])
+    elif len(sys.argv) == 7:
+      ThreadsApp(int(sys.argv[1]), int(sys.argv[2]), sys.argv[3],
+                int(sys.argv[4]), sys.argv[5], float(sys.argv[6]))
+    elif len(sys.argv) == 8:
+      ThreadsApp(int(sys.argv[1]), int(sys.argv[2]), sys.argv[3],
+                int(sys.argv[4]), sys.argv[5], float(sys.argv[6]), float(sys.argv[7]))
     else:
       print("Incorrect number of arguments")
