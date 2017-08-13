@@ -199,7 +199,8 @@ class MainWindow(tk.Frame):
           count += 1
         del listPorts[0]
         self.cbPort['values'] = listPorts
-        self.cbPort.set(listPorts[0])
+        if listPorts:
+            self.cbPort.set(listPorts[0])
 
     def showGraphs(self):
         print("mostrar diagramas")  # @note traza
