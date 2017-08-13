@@ -147,9 +147,13 @@ class MainWindow(tk.Frame):
             try:
                 # cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
                 #             " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\')
-                cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
-                            " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\') + \
-                            " " + self.vMax.get() + " " + self.vMin.get()
+                if self.vMax.get() is "" or self.vMin.get() is "":
+                    cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
+                                " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\')
+                else:                    
+                    cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
+                                " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\') + \
+                                " " + self.vMax.get() + " " + self.vMin.get()
                 os.system("runemg.py " + cmdArgs)
             except:
                 self.setErrorMsg("ERROR: Bauds not valid!")
@@ -176,7 +180,8 @@ class MainWindow(tk.Frame):
         elif (self.vMin.get() is "" and self.vMax.get() is not "") or \
              (self.vMin.get() is not "" and self.vMax.get() is ""):
             self.setErrorMsg("ERROR: One voltage data is empty")  
-        elif float(self.vMax.get()) <= float(self.vMin.get()):
+        elif self.vMin.get() is not "" and self.vMax.get() is not "" and \
+            float(self.vMax.get()) <= float(self.vMin.get()):
             self.setErrorMsg("ERROR: Voltage values are not correct") 
         else:
             ret = True
