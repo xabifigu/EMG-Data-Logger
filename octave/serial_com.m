@@ -9,8 +9,8 @@ function serialPortInit(s1)
 %    pause(1);                    % Optional wait for device to wake up 
     
     % Set the port parameters
-    % set(s1, 'baudrate', 9600);     % 9600
-		set(s1, 'baudrate', 115200);     % 9600
+    set(s1, 'baudrate', 9600);     % 9600
+		% set(s1, 'baudrate', 115200);     % 9600
     set(s1, 'bytesize', 8);        % 5, 6, 7 or 8
     set(s1, 'parity', 'n');        % 'n' or 'y'
     set(s1, 'stopbits', 1);        % 1 or 2
@@ -149,7 +149,7 @@ else
     % Instantiate the Serial Port
     % Naturally, set the COM port # to match your device
     % Use this crazy notation for any COM port number: 1 - 255
-    s1 = serial("\\\\.\\COM5")   % Open the port
+    s1 = serial("\\\\.\\COM7")   % Open the port
     pause(1);                    % Optional wait for device to wake up 
     
 		serialPortInit(s1);
@@ -212,7 +212,7 @@ else
 			for i = 1:8
 				M = [time_array{i};double(ch_array{i})];
 				MT = M';
-				file_name = strcat("data_channel_", num2str(i-1), ".csv");
+				file_name = strcat("data_channel_", num2str(i-1), ".emgdat");
 				csvwrite(file_name,MT);
 			endfor
 		endif
