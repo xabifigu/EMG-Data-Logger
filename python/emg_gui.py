@@ -28,8 +28,8 @@ class MainWindow(tk.Frame):
         self.labOutput = ttk.Label(self.topFrame, text='Output Folder', padding=(2,0))
         self.labMaxChls = ttk.Label(self.topFrame, text='Active channels')
         self.labNmChToShow = ttk.Label(self.topFrame, text='RT channels')
-        self.labVmax= ttk.Label(self.topFrame, text='V max')
-        self.labVmin= ttk.Label(self.topFrame, text='V min')
+        self.labVmax= ttk.Label(self.topFrame, text='Vcc (v)')
+        self.labRgain= ttk.Label(self.topFrame, text='Rgain (ohm)')
         self.labMsg = ttk.Label(self.msgFrame, text='Active')
 
         # definición de Combobox
@@ -58,11 +58,11 @@ class MainWindow(tk.Frame):
 
         self.vMax = StringVar()
         self.etVmax = ttk.Entry(self.topFrame, textvariable=self.vMax,
-                                width=5)
+                                width=6)
         
-        self.vMin = StringVar()
-        self.etVmin = ttk.Entry(self.topFrame, textvariable=self.vMin,
-                                width=5)
+        self.rGain = StringVar()
+        self.etRgain = ttk.Entry(self.topFrame, textvariable=self.rGain,
+                                width=6)
 
         # definir separador
         self.separ1 = ttk.Separator(self.topFrame, orient=HORIZONTAL)
@@ -104,8 +104,8 @@ class MainWindow(tk.Frame):
         self.etNmChl.grid(column=2, row=1, padx=5, pady=5, sticky=W)
         self.labVmax.grid(column=3, row=0, padx=5, pady=5, sticky=E)
         self.etVmax.grid(column=4, row=0, padx=5, pady=5, sticky=W)
-        self.labVmin.grid(column=3, row=1, padx=5, pady=5, sticky=E)
-        self.etVmin.grid(column=4, row=1, padx=5, pady=5, sticky=W)
+        self.labRgain.grid(column=3, row=1, padx=5, pady=5, sticky=E)
+        self.etRgain.grid(column=4, row=1, padx=5, pady=5, sticky=W)
 
 
         # self.imUpv.grid(column=4, row=0, padx=5, pady=5, columnspan=2, rowspan=2, sticky=W+E)
@@ -114,7 +114,7 @@ class MainWindow(tk.Frame):
 
         self.labPorts.grid(column=0, row=3, padx=5, pady=5)
         self.cbPort.grid(column=1, row=3, columnspan=2, padx=5, pady=5)
-        self.btRefresh.grid(column=3, row=3, columnspan=2, padx=5, pady=5)
+        self.btRefresh.grid(column=3, row=3, columnspan=2, padx=5, pady=5, sticky=W)
 
         self.labBauds.grid(column=0, row=4, padx=5, pady=5)
         self.etBauds.grid(column=1, row=4, padx=5, columnspan=2, pady=5, sticky=W)
@@ -147,13 +147,14 @@ class MainWindow(tk.Frame):
             try:
                 # cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
                 #             " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\')
-                if self.vMax.get() is "" or self.vMin.get() is "":
+                if self.rGain.get() is "":
                     cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
-                                " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\')
+                                " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\') + \
+                                " " + self.vMax.get()
                 else:                    
                     cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
                                 " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\') + \
-                                " " + self.vMax.get() + " " + self.vMin.get()
+                                " " + self.vMax.get() + " " + self.rGain.get()
                 os.system("runemg.py " + cmdArgs)
             except:
                 self.setErrorMsg("ERROR: Bauds not valid!")
@@ -177,12 +178,16 @@ class MainWindow(tk.Frame):
         elif int(self.etNmMaxCh.get()) < int(self.etNmChl.get()):
             print("Number of channles to show bigger than number of channels to save")  # @note traza
             self.setWarningMsg("WARNING: Number of channels are not correct")     
-        elif (self.vMin.get() is "" and self.vMax.get() is not "") or \
-             (self.vMin.get() is not "" and self.vMax.get() is ""):
-            self.setErrorMsg("ERROR: One voltage data is empty")  
-        elif self.vMin.get() is not "" and self.vMax.get() is not "" and \
-            float(self.vMax.get()) <= float(self.vMin.get()):
-            self.setErrorMsg("ERROR: Voltage values are not correct") 
+        # elif (self.rGain.get() is "" and self.vMax.get() is not "") or \
+        #      (self.rGain.get() is not "" and self.vMax.get() is ""):
+        #     self.setErrorMsg("ERROR: One voltage data is empty")  
+        # elif self.vMin.get() is not "" and self.vMax.get() is not "" #and \
+        #     float(self.vMax.get()) <= float(self.vMin.get()):
+        #     self.setErrorMsg("ERROR: Voltage values are not correct") 
+        # elif self.rGain.get() is "":
+        #     self.setErrorMsg("ERROR: Rgain is empty")  
+        elif self.vMax.get() is "":
+            self.setErrorMsg("ERROR: V max is enmpty")
         else:
             ret = True
         return ret
@@ -199,7 +204,8 @@ class MainWindow(tk.Frame):
           count += 1
         del listPorts[0]
         self.cbPort['values'] = listPorts
-        self.cbPort.set(listPorts[0])
+        if listPorts:
+            self.cbPort.set(listPorts[0])
 
     def showGraphs(self):
         print("mostrar diagramas")  # @note traza

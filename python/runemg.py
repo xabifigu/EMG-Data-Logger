@@ -33,11 +33,12 @@ def csv2Plot(path='.\\', extension='emgdat'):
 
 class SetPlot():
   # def __init__(self, name, q, nCh2Show=1):
-  def __init__(self, q, nCh2Show=1, vMax=4095, vMin=0):
+  def __init__(self, q, nCh2Show=1, vMax=4095, rGain=201000):
     self.q = q
     self.nCh2Show = nCh2Show
     self.vMax = vMax
-    self.vMin = vMin
+    self.rGain = rGain
+    self.gain = 201 * rGain / 1000
     self.startAnimation() # inicia la representación
 
   def data_gen(self):
@@ -68,9 +69,12 @@ class SetPlot():
 
   def init(self):
     # inicialización de datos para la gráfica
-    yMax = self.vMax + (self.vMax * 0.05)
+    # yMax = self.vMax + (self.vMax * 0.05)
+    yMax = self.vMax / self.gain
+    yMax = yMax + (yMax * 0.05)
     for i in range(0, self.nCh2Show):
-      self.arAx[i].set_ylim(self.vMin, yMax)
+      # self.arAx[i].set_ylim(self.vMin, yMax)
+      self.arAx[i].set_ylim(0, yMax)
       # self.arAx[i].set_ylim(0, 4250)
       self.arAx[i].set_xlim(0, 5000)
 
@@ -141,7 +145,7 @@ class ThreadsApp():
   #           outFolder='.\\'):
   def __init__(self, nChannels=8, nCh2Show=1,
             comPort='COM7', bauds=9600,
-            outFolder='.\\', vMax=4095, vMin=0):
+            outFolder='.\\', vMax=4095, rGain=201000):
 
     # Se crean las colas que enviarán los datos recogidos
     # por el módulo puerto serie a la gráfica en tiempo real.
@@ -156,11 +160,11 @@ class ThreadsApp():
                                               nChannels, nCh2Show,
                                               comPort, bauds,
                                               outFolder,
-                                              vMax, vMin) )
+                                              vMax, rGain) )
     thread1.daemon = True
     thread1.start()
 
-    SetPlot(q, nCh2Show, vMax, vMin)  # iniciar mgráfica en tiempo real
+    SetPlot(q, nCh2Show, vMax, rGain)  # iniciar mgráfica en tiempo real
 
     thread1.join()  # esperar a que termine el hilo secundario
 
