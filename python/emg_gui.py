@@ -6,7 +6,7 @@ from tkinter import ttk, font
 from serial.tools import list_ports
 from tkinter import filedialog
 import tkinter as tk
-from PIL import Image, ImageTk
+# from PIL import Image, ImageTk
 
 from runemg import csv2Plot
 
