@@ -62,8 +62,8 @@ class SerialCom():
 
   def __init__(self, name, q, 
               nChannels=8, nCh2Show=1, 
-              comPort='COM7', bauds=9600,
-              outFolder='.\\', vMax=4095, rGain=201000):
+              comPort='COM8', bauds=9600,
+              outFolder='.\\', vMax=0, rGain=0):
 
     self.q = q
     self.nChannels = nChannels
@@ -71,9 +71,20 @@ class SerialCom():
     self.comPort = comPort
     self.bauds = bauds
     self.outFolder = outFolder
-    self.vMax = vMax
-    # self.vMin = vMin
-    self.gain = 201 * rGain / 1000
+
+    # si vMax es 0, se muestran los datos en función del
+    # valor devuelto por el ADC
+    if vMax == 0:
+      self.vMax = 4095
+    else:
+      self.vMax = vMax
+
+    # si rGain es 0, no se calcula el valor en función 
+    # de la ganancia
+    if rGain == 0:
+      self.gain = 1
+    else:
+      self.gain = 201 * rGain / 1000
 
     print (time.time())
 
@@ -174,15 +185,16 @@ class SerialCom():
             matrixCh[chNum].append(adcValue)
             matrixTime[chNum].append(timeData)
 
-          dataToSend = [timeData,adcValue]
+          # dataToSend = [timeData,adcValue]
 
           if chNum < self.nCh2Show:
+            dataToSend = [timeData,adcValue]
             if self.q[chNum].empty():
               self.q[chNum].put(dataToSend)
 
-          # @note traza
-          cnt += 1 
-          print("Serial: " + str(cnt) + " Ch0: " + str(cntCh0))
+          # # @note traza
+          # cnt += 1 
+          # print("Serial: " + str(cnt) + " Ch0: " + str(cntCh0))
 
     # se paran todas las colas ('Nono' es el comando para parar)
     for i in range (0, self.nCh2Show):

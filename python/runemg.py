@@ -33,16 +33,28 @@ def csv2Plot(path='.\\', extension='emgdat'):
 
 class SetPlot():
   # def __init__(self, name, q, nCh2Show=1):
-  def __init__(self, q, nCh2Show=1, vMax=4095, rGain=201000):
+  def __init__(self, q, nCh2Show=1, vMax=0, rGain=0):
     self.q = q
     self.nCh2Show = nCh2Show
-    self.vMax = vMax
-    self.rGain = rGain
-    self.gain = 201 * rGain / 1000
+
+    # si vMax es 0, se muestran los datos en función del
+    # valor devuelto por el ADC
+    if vMax == 0:
+      self.vMax = 4095
+    else:
+      self.vMax = vMax
+
+    # si rGain es 0, no se calcula el valor en función 
+    # de la ganancia
+    if rGain == 0:
+      self.gain = 1
+    else:
+      self.gain = 201 * rGain / 1000
+
     self.startAnimation() # inicia la representación
 
   def data_gen(self):
-    cnt = 0
+    # cnt = 0
     x = []
 
     for i in range (0, self.nCh2Show):
@@ -57,14 +69,14 @@ class SetPlot():
         if not self.q[i].empty():
           x[i] = self.q[i].get()
         
-        print("Canal: " + str(i) + " valor: " + str(x[i]))  # @note traza
+        # print("Canal: " + str(i) + " valor: " + str(x[i]))  # @note traza
       
         if x[i] == None:
           self.ani.event_source.stop() 
           raise StopIteration
 
-      cnt += 1
-      print("Grafica: " + str(cnt) + " valor: " + str(x)) # @note traza
+      # cnt += 1
+      # print("Grafica: " + str(cnt) + " valor: " + str(x)) # @note traza
       yield x
 
   def init(self):
@@ -144,8 +156,8 @@ class ThreadsApp():
   #           comPort='COM8', bauds=9600,
   #           outFolder='.\\'):
   def __init__(self, nChannels=8, nCh2Show=1,
-            comPort='COM7', bauds=9600,
-            outFolder='.\\', vMax=4095, rGain=201000):
+            comPort='COM8', bauds=9600,
+            outFolder='.\\', vMax=0, rGain=0):
 
     # Se crean las colas que enviarán los datos recogidos
     # por el módulo puerto serie a la gráfica en tiempo real.
