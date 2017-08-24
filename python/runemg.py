@@ -24,7 +24,7 @@ def csv2Plot(path='.\\', extension='emgdat'):
       fName = cbook.get_sample_data(f, asfileobj=False)
       plt.plotfile(fName, cols=(0,1), delimiter=',', names=['t(ms)', 'value'], newfig=True)
       plt.title(fName, fontsize=8)
-      plt.ylim([0,4250])
+      # plt.ylim([0,4250])
       plt.grid()
       i += 1
     plt.show()
