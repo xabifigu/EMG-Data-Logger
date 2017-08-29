@@ -4,13 +4,9 @@ pkg load instrument-control
 %       FUNCIONES PUERTO SERIE      %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function serialPortInit(s1)
-  
-%    s1 = serial("\\\\.\\COM5")   % Open the port
-%    pause(1);                    % Optional wait for device to wake up 
     
     % Set the port parameters
-    set(s1, 'baudrate', 9600);     % 9600
-		% set(s1, 'baudrate', 115200);     % 9600
+    set(s1, 'baudrate', 38400);     % 38400
     set(s1, 'bytesize', 8);        % 5, 6, 7 or 8
     set(s1, 'parity', 'n');        % 'n' or 'y'
     set(s1, 'stopbits', 1);        % 1 or 2
@@ -24,11 +20,6 @@ function serialPortInit(s1)
     srl_flush(s1);
     
 endfunction
-
-%function serialPortStop(s1)
-%    % cerrar puerto serie
-%    fclose(s1);
-%endfunction
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -135,7 +126,6 @@ MAX_CHANNELS = 8;
 clear;
 
 % guardar tiempo de inicio del script
-%%t_start = tic();
 printf('Start CPU tic-toc: %f', tic());
 
 % INICIALIZAR PUERTO SERIE
@@ -149,8 +139,11 @@ else
     % Instantiate the Serial Port
     % Naturally, set the COM port # to match your device
     % Use this crazy notation for any COM port number: 1 - 255
-    s1 = serial("\\\\.\\COM7")   % Open the port
+    s1 = serial("\\\\.\\COM9")   % Open the port
     pause(1);                    % Optional wait for device to wake up 
+    
+    bauds_ser = get(s1,'baudrate')
+    newDataPeriod_ms = ((1 / bauds_ser) * 10) * 1000;
     
 		serialPortInit(s1);
 
@@ -168,16 +161,13 @@ else
         % posición del vector de datos (append)
         % '0.0' indica que el dato a almacenar es double
         serial_data(end+1) = srl_read(s1,1) + 0.0;
-%          a=fread(s1,1,'char');
-%        horzcat(serial_data, srl_read(sl,10));
       catch
         disp("X.F.: Serial Port stopped");
         break
       end_try_catch
       % almacenar el tiempo en el cual se ha obtenido el dato.
       % Se guarda tras la última posición del vector de tiempo(append)
-%      time_vector(end+1) = toc(t_start) + 0.0;
-      time_vector(end+1) = (0.086805555*dataRead) + 0.0;
+      time_vector(end+1) = (newDataPeriod_ms*dataRead) + 0.0;
       dataRead++;
     endwhile  % fin bucle recepción de puerto serie
   
@@ -220,18 +210,7 @@ else
 % MOSTRAR DATOS
     % mostrar gráfica de los datos obtenidos, siempre y cuando se haya
     % recibido al menos un dato
-    if (dataRead != 0)
-			% una misma ventana para todos los canales
-			% figure(1);
-			% for i = 1:8
-				% subplot (8, 1, i);
-				% plot(time_array{i},ch_array{i})
-				% xlabel ("time (s)");
-				% ylabel ("value");
-				% title(strcat("channel", num2str(i-1)));
-				% % title ("EMG data channel");
-			% endfor
-				
+    if (dataRead != 0)				
 			% un ventana por cada canal
 			for i = 1:8
 				figure(i);
@@ -239,7 +218,6 @@ else
 				xlabel ("time (ms)");
 				ylabel ("value");
 				title(strcat("channel", num2str(i-1)));
-				% title ("EMG data channel");
 			endfor
 		
     endif
@@ -249,22 +227,3 @@ else
     
     disp("FIN");
 endif  
-% endfunction 
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%       FUNCIONES PUERTO SERIE      %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%function serialPortInit(s1)
-%    % Set the port parameters
-%    set(s1, 'baudrate', 9600);     % 9600
-%    set(s1, 'bytesize', 8);        % 5, 6, 7 or 8
-%    set(s1, 'parity', 'n');        % 'n' or 'y'
-%    set(s1, 'stopbits', 1);        % 1 or 2
-%    set(s1, 'timeout', 5);         % 0.5 Seconds
-%        
-%    % Optional commands, these can be 'on' or 'off'
-%    set(s1, 'requesttosend', 'off');      % Sets the RTS line to off
-%    set(s1, 'dataterminalready', 'off'); % Sets the DTR line to off
-%endfunction
