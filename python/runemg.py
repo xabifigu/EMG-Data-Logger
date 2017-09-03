@@ -1,3 +1,6 @@
+# !/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -14,17 +17,27 @@ from serial_com import SerialCom
 
 # conversor de csv a gráfica
 def csv2Plot(path='.\\', extension='emgdat'):
+  """ 
+  @def    Busca todos los archivos con extensión 'extension'
+          dentro de la ruta 'path'. Mustra una gráfica por cada
+          archivo encontrado.
+  @arg    path  ruta donde buscar los ficheros
+          extension extensión de los ficheros a buscar
+  @return True si encuentra fichero con extensión
+          False si no ecneuntra fichero con extensión
+  """
   ret = False
   filesDir = path + '\\*.' + extension
   if not glob.glob(filesDir):
+    # no se encuentran ficheros
     pass
   else:
+    # una gráfica por cada fichero
     for f in glob.glob(filesDir):
       i = 0
       fName = cbook.get_sample_data(f, asfileobj=False)
       plt.plotfile(fName, cols=(0,1), delimiter=',', names=['t(ms)', 'value'], newfig=True)
       plt.title(fName, fontsize=8)
-      # plt.ylim([0,4250])
       plt.grid()
       i += 1
     plt.show()
@@ -32,8 +45,13 @@ def csv2Plot(path='.\\', extension='emgdat'):
   return ret
 
 class SetPlot():
-  # def __init__(self, name, q, nCh2Show=1):
+  """
+  Clase para mostrar gráfricas en tiempo real
+  """
   def __init__(self, q, nCh2Show=1, vMax=0, rGain=0):
+    """ 
+    Método inicial de la clase
+    """
     self.q = q
     self.nCh2Show = nCh2Show
 
@@ -54,7 +72,12 @@ class SetPlot():
     self.startAnimation() # inicia la representación
 
   def data_gen(self):
-    # cnt = 0
+    """ 
+    @def    Generar datos para alimentnar la gráfica.
+            Estos datos proceden de colas.
+    @arg    none
+    @return datos nuevos
+    """
     x = []
 
     for i in range (0, self.nCh2Show):
@@ -68,26 +91,24 @@ class SetPlot():
       for i in range(0, self.nCh2Show):
         if not self.q[i].empty():
           x[i] = self.q[i].get()
-        
-        # print("Canal: " + str(i) + " valor: " + str(x[i]))  # @note traza
       
         if x[i] == None:
+          # no se reciben datos nuevos, se para la gráfica
           self.ani.event_source.stop() 
           raise StopIteration
-
-      # cnt += 1
-      # print("Grafica: " + str(cnt) + " valor: " + str(x)) # @note traza
       yield x
 
   def init(self):
+    """ 
+    @def    Inicializa los datos de la gráfica
+    @arg    none
+    @return lineas a dibujar
+    """
     # inicialización de datos para la gráfica
-    # yMax = self.vMax + (self.vMax * 0.05)
     yMax = self.vMax / self.gain
     yMax = yMax + (yMax * 0.05)
     for i in range(0, self.nCh2Show):
-      # self.arAx[i].set_ylim(self.vMin, yMax)
       self.arAx[i].set_ylim(0, yMax)
-      # self.arAx[i].set_ylim(0, 4250)
       self.arAx[i].set_xlim(0, 5000)
 
       del self.arDataX[i][:]
@@ -97,6 +118,11 @@ class SetPlot():
     return self.arLine
 
   def run(self, data):
+    """ 
+    @def    Actualización de datos de la gráfica
+    @arg    data nuevos datos a integrar
+    @return lineas a dibujar
+    """
     # actualizar datos
     # se actualizan los datos de cada canal
     for i in range(0, self.nCh2Show):
@@ -114,6 +140,11 @@ class SetPlot():
     return self.arLine
 
   def startAnimation(self):
+    """ 
+    @def    Inicializa la animación (gráfica en tiempo real)
+    @arg    none
+    @return none
+    """
     # se crean los arrays
     self.arAx     = []
     self.arLine   = []
@@ -132,7 +163,7 @@ class SetPlot():
       self.arDataX.append(None)
       self.arDataY.append(None)
 
-      # todos los bubplots comparte el eje x
+      # todos los subplots comparten el eje x
       if i is 0:
         self.arAx[i] = fig.add_subplot(self.nCh2Show, 1, i+1)
       else:
@@ -152,13 +183,16 @@ class SetPlot():
 
 
 class ThreadsApp():
-  # def __init__(self, nChannels=8, nCh2Show=1,
-  #           comPort='COM8', bauds=9600,
-  #           outFolder='.\\'):
+  """
+  Clase para crear el hilo secundario y esperar a que finalice
+  """
   def __init__(self, nChannels=8, nCh2Show=1,
             comPort='COM8', bauds=9600,
             outFolder='.\\', vMax=0, rGain=0):
-
+    """ 
+    Método inicial de la clase.
+    Crea las colas necesarias, y crea y ejecuta el hilo secudnario.
+    """
     # Se crean las colas que enviarán los datos recogidos
     # por el módulo puerto serie a la gráfica en tiempo real.
     # Se crean tantas colas como canales se quieren visualizar
@@ -174,14 +208,17 @@ class ThreadsApp():
                                               outFolder,
                                               vMax, rGain) )
     thread1.daemon = True
-    thread1.start()
+    thread1.start() # se inicia el hilo
 
-    SetPlot(q, nCh2Show, vMax, rGain)  # iniciar mgráfica en tiempo real
+    SetPlot(q, nCh2Show, vMax, rGain)  # iniciar gráfica en tiempo real
 
     thread1.join()  # esperar a que termine el hilo secundario
 
 if __name__ == '__main__':
-    print(sys.argv)
+    """
+    Se evaluan los argumentos con los que se ejecuta este script
+    """
+    # print(sys.argv) # @note traza
     if len(sys.argv) == 1:
       ThreadsApp()
     elif len(sys.argv) == 2:

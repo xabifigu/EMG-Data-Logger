@@ -1,3 +1,7 @@
+# !/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
 import serial
 import time
 import numpy as np
@@ -25,9 +29,9 @@ def serialConfig (serialPort, bauds):
 #
 def getHighNibbleFromByte(data):
   """ 
-  @def 
-  @arg 
-  @return 
+  @def Devuelve el nibble alto del byte pasado como argumento
+  @arg data byte del cual obtener el nibble alto
+  @return nibble alto
   """
   x = data & 0xF0
   return (x >> 4)
@@ -35,17 +39,18 @@ def getHighNibbleFromByte(data):
 #
 def getLowNibbleFromByte(data):
   """ 
-  @def 
-  @arg 
-  @return 
+  @def Devuelve el nibble bajo del byte pasado como argumento
+  @arg data byte del cual obtener el nibble bajo
+  @return nibble bajo
   """
   return (data & 0x0F)
 
 #
 def  bytes2Word(highByte, lowByte):
   """ 
-  @def 
-  @arg 
+  @def Convierte dos bytes en word (2 bytes)
+  @arg highByte byte alto de la palabra a construir
+  @arg lowByte byte bajo de la palabra a construir
   @return 
   """
   x = highByte << 8
@@ -56,7 +61,9 @@ def  bytes2Word(highByte, lowByte):
 # MAIN
 ##################
 class SerialCom():
-
+  """
+  Clase para la comunicación serie
+  """
   MAX_CHANNELS = 8
   DATA_BUFFER_SIZE = 1
 
@@ -64,6 +71,9 @@ class SerialCom():
               nChannels=8, nCh2Show=1, 
               comPort='COM8', bauds=9600,
               outFolder='.\\', vMax=0, rGain=0):
+    """ 
+    Función inicial de la clase
+    """
 
     self.q = q
     self.nChannels = nChannels
@@ -86,7 +96,7 @@ class SerialCom():
     else:
       self.gain = 201 * rGain / 1000
 
-    print (time.time())
+    # print (time.time())
 
     # inicializar y abrir puerto serie
     ser = serialConfig(self.comPort, self.bauds)
@@ -109,9 +119,9 @@ class SerialCom():
 
     numReadData = 0
 
-    t_start = time.time()
+    # t_start = time.time()   # @note traza
 
-     # sincronizar datos del puerto serie
+    # sincronizar datos del puerto serie
     # Se busca leer el número de canal de manera consecutiva
     if isSerialOpen == True:
       numberReadCh = 0
@@ -144,15 +154,15 @@ class SerialCom():
               nextCh = 0
             else:
               nextCh = numberOfCh+1
-            print ('Correcto: ' + str(numberOfCh)) # @note traza
+            # print ('Correcto: ' + str(numberOfCh)) # @note traza
           else:
             # no se ha leído un número válido, resetear contador
             numberReadCh = 0
-            print('Canal no válido: ' + str(numberOfCh))  # @note traza
+            # print('Canal no válido: ' + str(numberOfCh))  # @note traza
         else:
           # En el siguiente dato se espera leer canal
           dataWithCh = True
-          print('Canal no esperado')  # @note traza
+          # print('Canal no esperado')  # @note traza
 
     if isSerialOpen is True:
       # crear matrices para almacenar los datos
@@ -184,8 +194,6 @@ class SerialCom():
           if chNum < self.MAX_CHANNELS:
             matrixCh[chNum].append(adcValue)
             matrixTime[chNum].append(timeData)
-
-          # dataToSend = [timeData,adcValue]
 
           if chNum < self.nCh2Show:
             dataToSend = [timeData,adcValue]
@@ -233,15 +241,17 @@ class SerialCom():
         np.savetxt(fileName, MT, delimiter=",")
 
     # @note traza
-    t_elapsed = time.time() - t_start
-    print(t_elapsed)
+    # t_elapsed = time.time() - t_start
+    # print(t_elapsed)
 
     #
   def getProcessReadData(self, arData):
     """ 
-    @def 
-    @arg 
-    @return 
+    @def    Se procesa el array de dos bytes, el cual
+            contiene el número de canal y el valor de ADC
+    @arg    arData array de dos bytes
+    @return ch    número de canal
+            value valor ADC
     """
     ch = getHighNibbleFromByte(arData[0])
     aux = getLowNibbleFromByte(arData[0])
@@ -251,6 +261,11 @@ class SerialCom():
 
 
 def main():
+    """ 
+    @def Función principal del módulo
+    @arg none
+    @return 0
+    """
     q = []
     q.append(Queue())
     q[0].put(None)

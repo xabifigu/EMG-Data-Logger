@@ -1,4 +1,11 @@
 # !/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import sys
+# comprobación de que ejecuta bajo la versión correcta de Python
+req_version = (3,5)
+if sys.version_info < req_version:
+    raise SyntaxError ("Python v.3.5 or bigger is needed. Please update it.")
 
 import os
 from tkinter import *
@@ -6,13 +13,18 @@ from tkinter import ttk, font
 from serial.tools import list_ports
 from tkinter import filedialog
 import tkinter as tk
-# from PIL import Image, ImageTk
 
 from runemg import csv2Plot
 
 # Gestor de geometría
 class MainWindow(tk.Frame):
+    """
+    Clase de la ventana principal
+    """
     def __init__(self, *args, **kwargs):
+        """ 
+        Método inicial de la clase para crear todos los objetos de la ventana
+        """
         tk.Frame.__init__(self, *args, **kwargs)        
         # Define los difrentes frames
         self.topFrame = ttk.Frame(self, borderwidth=2,
@@ -84,16 +96,8 @@ class MainWindow(tk.Frame):
  
         self.btShowGraph = ttk.Button(self.topFrame, text="Show Graphs From Directory", 
                             padding=(2,2), command=self.showGraphs)
- 
-        # # definición de imágenes
-        # pic = Image.open(".\\icons\\Upv.ico")
-        # pic = pic.resize((50,50), Image.ANTIALIAS)
-        # render = ImageTk.PhotoImage(pic)
-        # self.imUpv = ttk.Label(self.topFrame, image=render)
-        # self.imUpv.image = render
-
-        # Se definen las posiciones de los widgets dentro de
-        # la ventana.
+														
+        # Se definen las posiciones de los widgets dentro de la ventana.
         self.topFrame.grid(column=0, row=0, padx=5, pady=5)
         self.bottomFrame.grid(column=0, row=1, padx=5, pady=5)
         self.msgFrame.grid(column=0, row=3, columnspan=4, sticky=W+E)
@@ -106,9 +110,6 @@ class MainWindow(tk.Frame):
         self.etVmax.grid(column=4, row=0, padx=5, pady=5, sticky=W)
         self.labRgain.grid(column=3, row=1, padx=5, pady=5, sticky=E)
         self.etRgain.grid(column=4, row=1, padx=5, pady=5, sticky=W)
-
-
-        # self.imUpv.grid(column=4, row=0, padx=5, pady=5, columnspan=2, rowspan=2, sticky=W+E)
 
         self.separ1.grid(column=0, row=2, columnspan=5, padx=5, pady=5, sticky=W+E)
 
@@ -139,14 +140,17 @@ class MainWindow(tk.Frame):
         # actualizar puertos (combobox)
         self.actualizarPuertos()
     
-    # El método start es quien lanza el script de captura de datos  
     def start(self):
-        if self.checkConsistency() == True:
-            print(self.cbPort.get())
+        """ 
+        @def    Lanza el script de captura de datos
+        @arg    none
+        @return none
+        """
+        # se comprueba la consistencia de datos antes de ejecutar el script
+        if self.checkConsistency() == True: 
+            # print(self.cbPort.get())	# @note traza
             self.setInfoMsg("Active")
             try:
-                # cmdArgs = self.NmMaxCh.get() + " " + self.NmChlShow.get() + " " + self.cbPort.get() + \
-                #             " " + self.Bauds.get() + " " + self.etFolder.get().replace('/','\\')
                 if self.rGain.get() is "":
                     self.rGain.set("0")
                 if self.vMax.get() is "":
@@ -157,9 +161,15 @@ class MainWindow(tk.Frame):
                             " " + self.vMax.get() + " " + self.rGain.get()
                 os.system("runemg.py " + cmdArgs)
             except:
-                self.setErrorMsg("ERROR: Bauds not valid!")
+                self.setErrorMsg("ERROR: Something is wrong.")
 
     def checkConsistency(self):
+        """ 
+        @def    Se comprueba que los datos introducidos son correctos
+        @arg    none
+        @return True si todo es correcto
+                False si algún dato no es válido
+        """
         # se comprueba la consistencia de los datos
         ret = False
         if self.cbPort.get() == "" or \
@@ -167,33 +177,28 @@ class MainWindow(tk.Frame):
            self.etFolder.get() == "" or \
            self.etNmMaxCh.get() == "" or \
            self.etNmChl.get() == "":
-            print("Some settings are empty!")   # @note traza
+            # print("Some settings are empty!")   # @note traza
             self.setErrorMsg("ERROR: Some settings are empty!")
         elif int(self.etNmMaxCh.get()) > 8 or int(self.etNmChl.get()) > 8:
-            print("Number of channles bigger than 8")  # @note traza
+            # print("Number of channles bigger than 8")  # @note traza
             self.setErrorMsg("ERROR: Number of channels cannot be bigger than 8")    
         elif int(self.etNmMaxCh.get()) < 1 or int(self.etNmChl.get()) < 1:
-            print("Number of channles lower than 1")  # @note traza
+            # print("Number of channles lower than 1")  # @note traza
             self.setErrorMsg("ERROR: Number of channels cannot be less than 1")      
         elif int(self.etNmMaxCh.get()) < int(self.etNmChl.get()):
-            print("Number of channles to show bigger than number of channels to save")  # @note traza
+            # print("Number of channles to show bigger than number of channels to save")  # @note traza
             self.setWarningMsg("WARNING: Number of channels are not correct")     
-        # elif (self.rGain.get() is "" and self.vMax.get() is not "") or \
-        #      (self.rGain.get() is not "" and self.vMax.get() is ""):
-        #     self.setErrorMsg("ERROR: One voltage data is empty")  
-        # elif self.vMin.get() is not "" and self.vMax.get() is not "" #and \
-        #     float(self.vMax.get()) <= float(self.vMin.get()):
-        #     self.setErrorMsg("ERROR: Voltage values are not correct") 
-        # elif self.rGain.get() is "":
-        #     self.setErrorMsg("ERROR: Rgain is empty")  
-        # elif self.vMax.get() is "":
-        #     self.setErrorMsg("ERROR: V max is enmpty")
         else:
             ret = True
         return ret
 
     # actualiza la lista de puertos COM
     def actualizarPuertos(self):
+        """ 
+        @def    Actualizar lista de puertos serie disponibles
+        @arg    none
+        @return none
+        """
         self.cbPort.set('')
         ports = list_ports.comports()
         listPorts = [None]
@@ -208,7 +213,12 @@ class MainWindow(tk.Frame):
             self.cbPort.set(listPorts[0])
 
     def showGraphs(self):
-        print("mostrar diagramas")  # @note traza
+        """ 
+        @def    Mostrar gráficos desde ficheros
+        @arg    none
+        @return none
+        """
+        # print("mostrar diagramas")  # @note traza
         direct = filedialog.askdirectory(initialdir=os.getcwd(), title="Select graphs' directory")
         if csv2Plot(path=direct.replace('/','\\'), extension='emgdat') is False:
             self.setErrorMsg("ERROR: Files could not be open")
@@ -217,36 +227,59 @@ class MainWindow(tk.Frame):
 
     # selección de carpeta de salida de ficheros
     def selectOutputFolder(self):
-        print("Output Folder")  # @note traza
+        """ 
+        @def    Abre ventana para seleccionar carpeta
+        @arg    none
+        @return none
+        """
+        # print("Output Folder")  # @note traza
         self.Folder.set(filedialog.askdirectory(initialdir=os.getcwd(), title="Select directory"))
 
     # inserta un mensaje de error
     def setErrorMsg(self, text):
+        """ 
+        @def    Muestra mensaje de error
+        @arg    text texto a mostrar
+        @return none
+        """
         self.labMsg['text'] = text
         self.labMsg['foreground'] = "red"
 
     # inserta un mensaje de información
     def setInfoMsg(self, text):
+        """ 
+        @def    Muestra mensaje informativo
+        @arg    text texto a mostrar
+        @return none
+        """
         self.labMsg['text'] = text
         self.labMsg['foreground'] = "black"
     
     # inserta un mesaje de precaución
     def setWarningMsg(self, text):
+        """ 
+        @def    Muestra mensaje de precaución
+        @arg    text texto a mostrar
+        @return none
+        """
         self.labMsg['text'] = text
-        self.labMsg['foreground'] = "yellow"
+        self.labMsg['foreground'] = "orange"
 
 # main
 def main():
+    """ 
+    @def    Función principal del módulo
+    @arg    none
+    @return 0
+    """
     root = tk.Tk()
     root.title("EMG Data Logger")
     root.minsize(175,75)
     root.resizable(width=False,height=False)
     main = MainWindow(root) 
     main.pack(side="top", fill="both", expand=True)
-    # # self.root.wm_iconbitmap(r'Upv-ehu.ico')
     root.mainloop()
 
-    # mi_app = MainWindow()
     return 0
 
 if __name__ == '__main__':
